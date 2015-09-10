@@ -1,0 +1,45 @@
+package propositional
+
+import propositional.Expr
+
+import scala.collection.{mutable => m}
+
+object Types {
+  class Statement(val line: Int, val expr: Expr, val annotation: Annotation) {
+
+    override def toString = s"(" + line + ") " + expr + " " + annotation
+  }
+
+  type Proof = m.ListBuffer[Statement]
+
+  trait Annotation {
+
+  }
+
+  case class Axiom(number: Int) extends Annotation {
+
+    override def toString = s"Сх. акс. " + number
+  }
+
+  case class MP(first: Statement, second: Statement) extends Annotation {
+    var ints = false
+    var fi = 0
+    var se = 0
+
+    def this(f: Int, s: Int) = {
+      this(null, null)
+      ints = true
+      fi = f
+      se = s
+    }
+
+    //override def toString = s"M.P. " + first._1 + ", " + second._1
+    override def toString = "M.P. " + (if (ints) fi + ", " + se else first.line + ", " + second.line)
+  }
+
+  case class Error(msg: String = "") extends Annotation {
+
+    override def toString = s"Не доказано" + (if (msg != null && msg != "") ": " + msg else "")
+  }
+
+}

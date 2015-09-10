@@ -69,43 +69,6 @@ class Checker {
     io.Source.fromFile(fileName).getLines().foreach((line: String) =>
       exprs += new ExpressionParser(line.replaceAll(" ", "")).MainRule.run())
     apply(exprs)
-    /*io.Source.fromFile(fileName).getLines().foreach((line: String) => {
-      val tryExpr = new ExpressionParser(line).MainRule.run()
-      if (tryExpr.isSuccess) {
-        val expr = tryExpr.get
-        expr match {
-          case a -> b =>
-            addMP(a, b, lineNumber)
-          case _ =>
-        }
-        val num = Util.axiomNumber(expr)
-        if (num != -1) {
-          proof += new Statement(lineNumber, expr, new Axiom(num))
-        } else {
-          secondToFirst.get(expr) match {
-            case Some(list) =>
-              var res = findMP(expr, proof, list)
-              res match {
-                case Some(data) =>
-                  proof += new Statement(lineNumber, expr, new MP(data._1, data._2))
-                case _ =>
-                  proof += new Statement(lineNumber, expr, new Error())
-              }
-              /*if (res._1 != -1) {
-                proof += new Statement(lineNumber, expr, new MP(res._1, res._2))
-              } else {
-                proof += new Statement(lineNumber, expr, new Error())
-              }*/
-            case None => proof += new Statement(lineNumber, expr, new Error())
-          }
-        }
-      }
-      else {
-        proof += new Statement(lineNumber, null, new Error("Не могу прочитать выражение: " + line))
-      }
-      lineNumber += 1
-    })
-    proof*/
   }
 }
 

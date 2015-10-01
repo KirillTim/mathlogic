@@ -1,16 +1,14 @@
 package propositional
 
-import propositional.Expr
-
 import scala.collection.{mutable => m}
 
 object Types {
-  class Statement(val line: Int, val expr: Expr, val annotation: Annotation) {
+  case class Statement(line: Int, expr: Expr, annotation: Annotation) {
 
     override def toString = s"(" + line + ") " + expr + " " + annotation
   }
 
-  type Proof = m.ListBuffer[Statement]
+  type Proof = m.MutableList[Statement]
 
   trait Annotation {
 
@@ -19,6 +17,10 @@ object Types {
   case class Axiom(number: Int) extends Annotation {
 
     override def toString = s"Сх. акс. " + number
+  }
+
+  case class Assumption() extends Annotation {
+    override def toString = "Предположение"
   }
 
   case class MP(first: Statement, second: Statement) extends Annotation {

@@ -122,6 +122,7 @@ object ExprTypes {
     override def toString: String = a match {
       case v: Var => "!" + a.toString
       case v: Const => "!" + a.toString
+      case v: Not => "!" + a.toString
       case _ => "!(" + a.toString + ")"
     }
 

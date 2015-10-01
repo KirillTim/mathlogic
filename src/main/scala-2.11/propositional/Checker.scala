@@ -18,22 +18,19 @@ class Checker {
   }
 
   def findMP(expr: Expr, proof: Proof, candidates: m.HashMap[Expr, Int]): Option[(Int, Int)] = {
-    for (i <- candidates) {
-      for (p <- proof) {
-        if (p.expr.equals(i._1) && p.annotation.getClass != Error.getClass) {
-          //res = (p.line, i._2)
-          return Some((p.line, i._2))
-        }
-      }
+    for (i <- candidates;
+         p <- proof
+         if p.expr.equals(i._1) && p.annotation.getClass != Error.getClass) {
+      return Some((p.line, i._2))
     }
     None
   }
 
-  def apply(proofToCheck: Seq[Try[Expr]]): Proof = {
+  def apply(context: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[Proof, Proof] = {
+    var proof = new Proof()
     var lineNumber = 1
-    proofToCheck.foreach((tryExpr: Try[Expr]) => {
-      if (tryExpr.isSuccess) {
-        val expr = tryExpr.get
+    var error = false
+    proofToCheck.foreach((expr: Expr) => {
         expr match {
           case a -> b =>
             addMP(a, b, lineNumber)
@@ -41,33 +38,52 @@ class Checker {
         }
         val num = Util.axiomNumber(expr)
         if (num != -1) {
-          proof.append(new Statement(lineNumber, expr, new Axiom(num)))
+          proof += new Statement(lineNumber, expr, new Axiom(num))
+        } else if (context.contains(expr)) {
+          proof += new Statement(lineNumber, expr, new Assumption())
         } else {
           secondToFirst.get(expr) match {
             case Some(list) =>
               val res = findMP(expr, proof, list)
               res match {
                 case Some(data) =>
-                  proof.append(new Statement(lineNumber, expr, new MP(data._1, data._2)))
+                  //proof += new Statement(lineNumber, expr, new MP(data._1, data._2))
+                  proof += new Statement(lineNumber, expr, new MP(proof(data._1-1), proof(data._2-1)));
                 case _ =>
-                  proof.append(new Statement(lineNumber, expr, new Error()))
+                  proof += new Statement(lineNumber, expr, new Error())
+                  error = true
               }
-            case None => proof += new Statement(lineNumber, expr, new Error())
+            case None =>
+              proof += new Statement(lineNumber, expr, new Error())
+              error = true
           }
         }
-      }
-      else {
-        proof += new Statement(lineNumber, null, new Error("Не могу прочитать выражение:("))
-      }
       lineNumber += 1
     })
-    proof
+    beta match {
+      case Some(te) if te != proof.last.expr => error = true
+      case _ =>
+    }
+    if (error)
+      Left(proof)
+    else
+      Right(proof)
   }
 
-  def apply(fileName: String): Proof = {
-    var exprs = new m.MutableList[Try[Expr]]
-    io.Source.fromFile(fileName).getLines().foreach((line: String) =>
-      exprs += new ExpressionParser(line.replaceAll(" ", "")).MainRule.run())
+  def apply(proofToCheck: Seq[Expr]): Either[Proof, Proof] = {
+    apply(List.empty, None, proofToCheck)
+  }
+
+  def apply(fileName: String): Either[Proof, Proof] = {
+    var exprs = new m.MutableList[Expr]
+    io.Source.fromFile(fileName).getLines().foreach((line: String) => {
+      val parsed = new ExpressionParser(line.replaceAll(" ", "")).inputLine.run()
+      if (parsed.isSuccess) {
+        exprs += parsed.get
+      } else {
+        println("Не могу прочитать: " + line)
+      }
+    })
     apply(exprs)
   }
 }

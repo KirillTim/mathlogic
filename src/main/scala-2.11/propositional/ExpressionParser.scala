@@ -5,8 +5,15 @@ import org.parboiled2._
 
 class ExpressionParser(val input: ParserInput) extends Parser {
 
-  def MainRule = rule {
+  def inputLine = rule {
     expression ~ EOI
+  }
+
+  def derivationInputLine: Rule1[(List[Expr], Expr)] = rule {
+    ((zeroOrMore(expression).separatedBy(",") ~> ((a: Seq[Expr]) => a.toList)) ~
+      "|-" ~
+      expression) ~> ((a: List[Expr], b: Expr) => (a, b)) ~
+      EOI
   }
 
   private def expression: Rule1[Expr] = rule {
@@ -52,7 +59,7 @@ class ExpressionParser(val input: ParserInput) extends Parser {
 
   private def upper: Rule0 =
     rule {
-      anyOf("PYFGCRLAOEUIDHTNSQJKXBMWVZ") ~ zeroOrMore(anyOf("0123456789"))
+      anyOf("QWERTYUIOPASDFGHJKLZXCVBNM") ~ zeroOrMore(anyOf("0123456789"))
     }
 
   private def lowerE: Rule0 =

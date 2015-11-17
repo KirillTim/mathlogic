@@ -1,5 +1,7 @@
 package propositional
 
+import propositional.ExprTypes.Var
+
 import scala.collection.{mutable => m}
 
 object Types {
@@ -42,6 +44,14 @@ object Types {
   case class Error(msg: String = "") extends Annotation {
 
     override def toString = s"Не доказано" + (if (msg != null && msg != "") ": " + msg else "")
+  }
+
+  trait ErrorReason {
+
+  }
+
+  case class NotTrue(values: String) extends ErrorReason {
+    override def toString: String = "Высказывание ложно при " + values
   }
 
 }

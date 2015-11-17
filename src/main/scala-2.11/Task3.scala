@@ -1,5 +1,5 @@
-import propositional.Expr
-import propositional.ExprTypes.Var
+import propositional.{ProofMaker, Types, Expr}
+import propositional.ExprTypes._
 import propositional.Types._
 
 import scala.collection.{ mutable, immutable}
@@ -8,17 +8,21 @@ import scala.collection.{ mutable, immutable}
 
 object Task3 {
   def main(args: Array[String]): Unit = {
-    /*val a  = immutable.List[Int](1,2,3)
-    val b = immutable.List(11,12,13)
-    val c = immutable.List[immutable.List[Int]](a,b)
-    println(a)
-    println(b)
-    println(c.flatten)*/
-    val a = List(List(1,2), List(10,11), List(100,101))
-    val b = a.flatMap((a:List[Int]) => a)
-    val c = a.flatten
-    println(b)
-    println(c)
 
+    /*val q = (new Var("A") V new !!(new Var("A"))) & new Var("B") V new Var("C")// V new !!(new Var("C"))
+    val e = new ProofMaker()
+    val r = e.whenFalse(q)*/
+
+    /*def impl(a: Expr, b: Expr) = List(b ->: (a ->: b), b, a->: b)
+
+    def andFF(a: Expr, b:Expr) = List(((a&b)->:a)->:(((a&b)->: !!(a))->: !!(a & b)))
+    def t(a: Expr, b:Expr) = List(a & !!(b))
+    println(t(new Var("A"), new Var("B")).head)*/
+    val expr = new Var("B") //V new !!(new Var("B"))
+    val maker = new ProofMaker()
+    maker.apply(expr) match {
+      case (Left(_:ErrorReason)) => println("error!")//(_:ErrorReason) => println("erorr: "+_)
+      case (Right(proof)) => println("no error!")//proof.foreach((_:Expr) => println(_))
+    }
   }
 }

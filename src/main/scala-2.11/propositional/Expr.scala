@@ -1,10 +1,14 @@
 package propositional
 
+import scala.collection.mutable
+
 trait Expr {
   import ExprTypes._
   def evaluate(m: Map[String, Boolean]): Boolean
   var oldHash = -1
   val priority: Int
+
+  def getVars : mutable.HashSet[String]
 
   def str2(a: Expr, b: Expr, delim: String): String = {
     var aStr = a.toString
@@ -36,6 +40,8 @@ object ExprTypes {
 
     val priority: Int = 9
 
+    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
+
     override def toString: String = str2(a, b, "|")
 
     override def hashCode: Int = {
@@ -52,6 +58,8 @@ object ExprTypes {
 
     val priority: Int = 10
 
+    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
+
     override def toString: String = str2(a, b, "&")
 
     override def hashCode: Int = {
@@ -66,6 +74,8 @@ object ExprTypes {
     override def evaluate(m: Map[String, Boolean]): Boolean = x
 
     override val priority: Int = 20
+
+    override def getVars : mutable.HashSet[String] = mutable.HashSet.empty[String]
 
     override def toString: String = x.toString
 
@@ -87,6 +97,8 @@ object ExprTypes {
 
     override val priority: Int = 20
 
+    override def getVars : mutable.HashSet[String] = new mutable.HashSet() += name
+
     override def toString: String = name
 
     override def hashCode: Int = {
@@ -103,6 +115,8 @@ object ExprTypes {
 
     override val priority: Int = 8
 
+    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
+
     override def toString: String = str2(a, b, "->")
 
     override def hashCode: Int = {
@@ -118,6 +132,8 @@ object ExprTypes {
     override def evaluate(m: Map[String, Boolean]): Boolean = !a.evaluate(m)
 
     override val priority: Int = 11
+
+    override def getVars : mutable.HashSet[String] = a.getVars
 
     override def toString: String = a match {
       case v: Var => "!" + a.toString

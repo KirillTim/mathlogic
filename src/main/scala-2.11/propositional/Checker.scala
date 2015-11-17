@@ -47,7 +47,6 @@ class Checker {
               val res = findMP(expr, proof, list)
               res match {
                 case Some(data) =>
-                  //proof += new Statement(lineNumber, expr, new MP(data._1, data._2))
                   proof += new Statement(lineNumber, expr, new MP(proof(data._1-1), proof(data._2-1)));
                 case _ =>
                   proof += new Statement(lineNumber, expr, new Error())

@@ -1,44 +1,102 @@
 package propositional
 
 import propositional.ExprTypes.Var
-import propositional.Types.{NotTrue, ErrorReason, Proof}
+import propositional.Types.{Statement, NotTrue, ErrorReason, Proof}
+import scala.collection.{mutable => m}
+import propositional.Proofs
 
 class ProofMaker {
+  type Hypothesis = Map[String, Boolean]
   def apply(fileName: String): Either[ErrorReason, Proof] = {
     null
   }
 
   def apply(expr: Expr): Either[ErrorReason, List[Expr]] = {
-     whenFalse(expr) match {
-       case Some(q:Map[Var, Boolean]) => Left(new NotTrue(varsToString(q)))
-       case _ => Right(makeProof(expr))
-     }
-    null
+    whenFalse(expr) match {
+      case Some(q: Map[String, Boolean]) => Left(new NotTrue(varsToString(q)))
+      case _ => Right(makeProof(expr))
+    }
   }
 
   def makeProof(expr: Expr) = {
     null
   }
 
+  def removeAssumption(vars:m.HashSet[String], proofs: Map[Hypothesis, Seq[Expr]]) : Map[Hypothesis, Seq[Expr]] = {
+    if (vars.isEmpty)
+      proofs
+    else {
+      val smallerVars = vars.take(vars.size - 1)
+      val smallerVarsList = createVarsToBoolList(smallerVars)
+      var newProofs = m.HashMap[Hypothesis, Seq[Expr]]()
+      for (i <- smallerVarsList) {
+        var proofsToMerge = m.MutableList[Seq[Expr]]()
+        var varToRemove = ""
+        for (j <- proofs) {
+          val hypot = j._1
+          if (checkVars(i, hypot)) {
+            proofsToMerge += j._2
+            varToRemove = hypot.keySet.filterNot(i.keySet).head
+          }
+        }
+        //proofsToMerge.size == 2
+        if (proofsToMerge.size != 2)
+          throw new Error("proofsToMerge.size != 2")
+        if (varToRemove.isEmpty)
+          throw new Error("varToRemove.isEmpty")
+        var newProof = List[Expr]()
+        val deduceContext = i.keys.map((e:String) => new Var(e)).toSeq
+        val deduced0 = new Deductor().apply(deduceContext, Some(proofsToMerge.head.last), proofsToMerge.head) match {
+          case Left(proof) => throw new Error("wrong proof") null
+          case Right(proof) => proof.map((a:Statement) => a.expr)
+        }
+        val deduced1 = new Deductor().apply(deduceContext, Some(proofsToMerge(1).last), proofsToMerge(1)) match {
+          case Left(proof) => throw new Error("wrong proof") null
+          case Right(proof) => proof.map((a: Statement) => a.expr)
+        }
+        newProof ++= (deduced0 ++ deduced1 ++ Proofs.tertiumNonDatur(new Var(varToRemove)))
+
+      }
+    }
+  }
+  //проверка, что все ключи из первого map есть во втором и все ключи из первого имеют одинаковые занчения в первом и втором
+  //первый меньше чем второй
+  def checkVars(first:Hypothesis,second:Hypothesis) : Boolean = {
+    for (i <- first) {
+      second.get(i._1) match {
+        case Some(a) => if (a != i._2) return false
+        case _ => return false
+      }
+    }
+    true
+  }
+
+  def createVarsToBoolList(vars:m.HashSet[String]): List[Hypothesis] = {
+    gen(vars.size).map(x => vars.zip(x).toMap)
+  }
+
   /**
     *
     * @param expr
-    * @return Option[Map]
+    * @return Option[Map[String, Boolean] ]
     */
-  def whenFalse(expr: Expr) = {
-    val vars = expr.getVars
-    gen(vars.size).map(x => vars.zip(x).toMap).map(x => if (!expr.evaluate(x)) Some(x) else None).find {
-      case Some(_) => true
-      case _ => false
-    }.map {
-      case Some(q) => q
+  def whenFalse(expr: Expr): Option[Hypothesis] = {
+    //val vars = expr.getVars
+    //gen(vars.size).map(x => vars.zip(x).toMap)
+    createVarsToBoolList(expr.getVars)
+      .map((x: Hypothesis) => if (!expr.evaluate(x)) Some(x) else None)
+      .find({
+        case Some(_) => true
+        case _ => false
+      }) match {
+      case Some(a) => a//a.get
       case _ => None
     }
   }
 
-  private def varsToString(m: Map[Var, Boolean]):String = {
+  private def varsToString(m: Map[String, Boolean]): String = {
     var q = ""
-    m.keys.foreach((x: Var) => q += (x + "=" + (if (m.get(x).get) "И" else "Л") + ", "))
+    m.keys.foreach((x: String) => q += (x + "=" + (if (m.get(x).get) "И" else "Л") + ", "))
     q.take(q.length - 2)
   }
 

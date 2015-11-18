@@ -18,10 +18,10 @@ object Task3 {
     def andFF(a: Expr, b:Expr) = List(((a&b)->:a)->:(((a&b)->: !!(a))->: !!(a & b)))
     def t(a: Expr, b:Expr) = List(a & !!(b))
     println(t(new Var("A"), new Var("B")).head)*/
-    val expr = new Var("B") //V new !!(new Var("B"))
+    val expr = new Var("A") & new Var("B") V new !!(new Var("B"))
     val maker = new ProofMaker()
     maker.apply(expr) match {
-      case (Left(_:ErrorReason)) => println("error!")//(_:ErrorReason) => println("erorr: "+_)
+      case (Left(a)) => println(a)
       case (Right(proof)) => println("no error!")//proof.foreach((_:Expr) => println(_))
     }
   }

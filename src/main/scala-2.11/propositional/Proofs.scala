@@ -214,8 +214,8 @@ object Proofs {
     )
 
 
-  var actions = Map[(String, Boolean, Boolean), Function2[Expr, Expr, List[Expr]]]()
-  //actions += (("And",true,true) -> andTT)
+  var actions = m.Map[(String, Boolean, Boolean), (Expr, Expr) => List[Expr]]()
+  actions += (("And",true,true) -> andTT)
 
   def buildProof(e: Expr, values: Map[String, Boolean]): m.MutableList[Expr] = {
     var rv = m.MutableList[Expr]()

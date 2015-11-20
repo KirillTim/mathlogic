@@ -181,16 +181,85 @@ object Proofs {
 
   // Impl
   def implFF(a: Expr, b: Expr) =
-    List()
+    List(
+      (!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))),
+      ((!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b)))) ->: (a ->: ((!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))))),
+      a ->: ((!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b)))),
+      !!(a) ->: (!!(b) ->: !!(a)),
+      (!!(a) ->: (!!(b) ->: !!(a))) ->: (a ->: (!!(a) ->: (!!(b) ->: !!(a)))),
+      a ->: (!!(a) ->: (!!(b) ->: !!(a))),
+      a ->: (!!(b) ->: a),
+      (a ->: (!!(b) ->: a)) ->: (a ->: (a ->: (!!(b) ->: a))),
+      a ->: (a ->: (!!(b) ->: a)),
+      a ->: (a ->: a),
+      (a ->: (a ->: a)) ->: ((a ->: ((a ->: a) ->: a)) ->: (a ->: a)),
+      (a ->: ((a ->: a) ->: a)) ->: (a ->: a),
+      a ->: ((a ->: a) ->: a),
+      a ->: a,
+      !!(a),
+      !!(a) ->: (a ->: !!(a)),
+      a ->: !!(a),
+      (a ->: a) ->: ((a ->: (a ->: (!!(b) ->: a))) ->: (a ->: (!!(b) ->: a))),
+      (a ->: (a ->: (!!(b) ->: a))) ->: (a ->: (!!(b) ->: a)),
+      a ->: (!!(b) ->: a),
+      (a ->: !!(a)) ->: ((a ->: (!!(a) ->: (!!(b) ->: !!(a)))) ->: (a ->: (!!(b) ->: !!(a)))),
+      (a ->: (!!(a) ->: (!!(b) ->: !!(a)))) ->: (a ->: (!!(b) ->: !!(a))),
+      a ->: (!!(b) ->: !!(a)),
+      (a ->: (!!(b) ->: a)) ->: ((a ->: ((!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))))) ->: (a ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))))),
+      (a ->: ((!!(b) ->: a) ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))))) ->: (a ->: ((!!(b) ->: !!(a)) ->: !!(!!(b)))),
+      a ->: ((!!(b) ->: !!(a)) ->: !!(!!(b))),
+      (a ->: (!!(b) ->: !!(a))) ->: ((a ->: ((!!(b) ->: !!(a)) ->: !!(!!(b)))) ->: (a ->: !!(!!(b)))),
+      (a ->: ((!!(b) ->: !!(a)) ->: !!(!!(b)))) ->: (a ->: !!(!!(b))),
+      a ->: !!(!!(b)),
+      !!(!!(b)) ->: b,
+      (!!(!!(b)) ->: b) ->: (a ->: (!!(!!(b)) ->: b)),
+      a ->: (!!(!!(b)) ->: b),
+      (a ->: !!(!!(b))) ->: ((a ->: (!!(!!(b)) ->: b)) ->: (a ->: b)),
+      (a ->: (!!(!!(b)) ->: b)) ->: (a ->: b),
+      a ->: b
+    )
 
   def implFT(a: Expr, b: Expr) =
-    List()
+    List(
+      b ->: (a ->: b),
+      b,
+      a ->: b
+    )
 
-  def implTF(a: Expr, b: Expr) =
-    List()
+  def implTF(a: Expr, b: Expr, values: Map[String, Boolean]) =
+    List(
+      (a ->: b) ->: ((a ->: b) ->: (a ->: b)),
+      ((a ->: b) ->: ((a ->: b) ->: (a ->: b))) ->: (((a ->: b) ->: (((a ->: b) ->: (a ->: b)) ->: (a ->: b))) ->: ((a ->: b) ->: (a ->: b))),
+      ((a ->: b) ->: (((a ->: b) ->: (a ->: b)) ->: (a ->: b))) ->: ((a ->: b) ->: (a ->: b)),
+      (a ->: b) ->: (((a ->: b) ->: (a ->: b)) ->: (a ->: b)),
+      (a ->: b) ->: (a ->: b),
+      a,
+      a ->: ((a ->: b) ->: a),
+      (a ->: b) ->: a,
+      ((a ->: b) ->: a) ->: (((a ->: b) ->: (a ->: b)) ->: ((a ->: b) ->: b)),
+      ((a ->: b) ->: (a ->: b)) ->: ((a ->: b) ->: b),
+      (a ->: b) ->: b,
+      b ->: ( !!(a) V b),
+      (b ->: ( !!(a) V b)) ->: ((a ->: b) ->: (b ->: ( !!(a) V b))),
+      (a ->: b) ->: (b ->: ( !!(a) V b)),
+      ((a ->: b) ->: b) ->: (((a ->: b) ->: (b ->: ( !!(a) V b))) ->: ((a ->: b) ->: ( !!(a) V b))),
+      ((a ->: b) ->: (b ->: ( !!(a) V b))) ->: ((a ->: b) ->: ( !!(a) V b)),
+      (a ->: b) ->: ( !!(a) V b),
+      buildProof(new Not(new Not(a)), values),
+      buildProof(new Not(a) V b, values),
+      !!( !!(a) V b) ->: ((a ->: b) ->: !!( !!(a) V b)),
+      (a ->: b) ->: !!( !!(a) V b),
+      ((a ->: b) ->: ( !!(a) V b)) ->: (((a ->: b) ->: !!( !!(a) V b)) ->: !!(a ->: b)),
+      ((a ->: b) ->: !!( !!(a) V b)) ->: !!(a ->: b),
+      !!(a ->: b)
+    )
 
   def implTT(a: Expr, b: Expr) =
-    List()
+    List(
+      b ->: (a ->: b),
+      b,
+      a ->: b
+    )
 
   // Not
   def notT(a: Expr) =
@@ -214,11 +283,8 @@ object Proofs {
     )
 
 
-  var actions = m.Map[(String, Boolean, Boolean), (Expr, Expr) => List[Expr]]()
-  actions += (("And",true,true) -> andTT)
-
-  def buildProof(e: Expr, values: Map[String, Boolean]): m.MutableList[Expr] = {
-    var rv = m.MutableList[Expr]()
+  def buildProof(e: Expr, values: Map[String, Boolean]): List[Expr] = {
+    var rv = List[Expr]()
     e match {
       case a & b =>
         val l = a.evaluate(values)
@@ -259,7 +325,7 @@ object Proofs {
           case (true, true) =>
             rv ++= implTT(a, b)
           case (true, false) =>
-            rv ++= implTF(a, b)
+            rv ++= implTF(a, b, values)
           case (false, true) =>
             rv ++= implFT(a, b)
           case (false, false) =>

@@ -11,10 +11,13 @@ object Task3Test {
       "(A->B->C)->(B->A->C)",
       "(P->Q)|(!P->Q)",
       "A&B->A&B",
-      "(A|!A)|B"
+      "(A|!A)|B",
+      "B&(B|!A)&C->C"
     )
     val dataFalse = List(
-      "A->!A"
+      "A->!A",
+      "B",
+      "B&(B|!A)&(C->A)"
     )
     testTrue(dataTrue)
     testFalse(dataFalse)

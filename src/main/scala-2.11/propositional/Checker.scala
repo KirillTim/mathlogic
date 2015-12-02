@@ -26,7 +26,7 @@ class Checker {
     None
   }
 
-  def apply(context: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[Proof, Proof] = {
+  def apply(context: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
     var proof = new Proof()
     var lineNumber = 1
     var error = false
@@ -50,30 +50,27 @@ class Checker {
                   proof += new Statement(lineNumber, expr, new MP(proof(data._1-1), proof(data._2-1)));
                 case _ =>
                   proof += new Statement(lineNumber, expr, new Error())
-                  error = true
+                  return Left(WrongProofFromLine(lineNumber))
               }
             case None =>
               proof += new Statement(lineNumber, expr, new Error())
-              error = true
+              return Left(WrongProofFromLine(lineNumber))
           }
         }
       lineNumber += 1
     })
     beta match {
-      case Some(te) if te != proof.last.expr => error = true
+      case Some(te) if te != proof.last.expr => return Left(WrongProofWithMsg("last statement doesn't equals to beta"))
       case _ =>
     }
-    if (error)
-      Left(proof)
-    else
-      Right(proof)
+    Right(proof)
   }
 
-  def apply(proofToCheck: Seq[Expr]): Either[Proof, Proof] = {
+  def apply(proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
     apply(List.empty, None, proofToCheck)
   }
 
-  def apply(fileName: String): Either[Proof, Proof] = {
+  def apply(fileName: String): Either[WrongProof, Proof] = {
     var exprs = new m.MutableList[Expr]
     io.Source.fromFile(fileName).getLines().foreach((line: String) => {
       val parsed = new ExpressionParser(line.replaceAll(" ", "")).inputLine.run()

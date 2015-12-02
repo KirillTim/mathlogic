@@ -1,28 +1,22 @@
-//import propositional.{ProofMaker, Types, Expr}
-//import propositional.ExprTypes._
-//import propositional.Types._
-//
-//import scala.collection.{ mutable, immutable}
-//
-//
-//
-//object Task3 {
-//  def main(args: Array[String]): Unit = {
-//
-//    /*val q = (new Var("A") V new !!(new Var("A"))) & new Var("B") V new Var("C")// V new !!(new Var("C"))
-//    val e = new ProofMaker()
-//    val r = e.whenFalse(q)*/
-//
-//    /*def impl(a: Expr, b: Expr) = List(b ->: (a ->: b), b, a->: b)
-//
-//    def andFF(a: Expr, b:Expr) = List(((a&b)->:a)->:(((a&b)->: !!(a))->: !!(a & b)))
-//    def t(a: Expr, b:Expr) = List(a & !!(b))
-//    println(t(new Var("A"), new Var("B")).head)*/
-//    val expr = new Var("A") & new Var("B") V new !!(new Var("B"))
-//    val maker = new ProofMaker()
-//    maker.apply(expr) match {
-//      case (Left(a)) => println(a)
-//      case (Right(proof)) => println("no error!")//proof.foreach((_:Expr) => println(_))
-//    }
-//  }
-//}
+import java.io.{File, PrintWriter}
+
+import propositional.{ExpressionParser, ProofMaker}
+
+
+
+object Task3 {
+  def main(args: Array[String]): Unit = {
+    val fileName = if (args.length == 0 || args(0) == "") "data/HW3/true1.in" else args(0)
+    val lines = io.Source.fromFile(fileName).getLines().toList
+    val parsed = new ExpressionParser(lines.head.replaceAll(" ", ""))
+      .inputLine.run().get
+    val maker = new ProofMaker()
+    val pw = new PrintWriter(new File(fileName+".hw3.out"))
+
+    maker.apply(parsed) match {
+      case Left(reason) => pw.write(reason.toString)
+      case Right(proof) => proof.foreach( e => pw.write(e+"\n"))
+    }
+    pw.close()
+  }
+}

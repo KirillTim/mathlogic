@@ -7,7 +7,7 @@ import scala.collection.{mutable => m}
 
 class Deductor {
 
-  def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Either[Proof, Proof] = {
+  def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Either[WrongProof, Proof] = {
     val alpha = context.last
     new Checker().apply(context.init, Some(context.last ->: beta), proof.map((st: Statement) => {
       st match {
@@ -44,7 +44,7 @@ class Deductor {
     List(line1, line2, line3)
   }
 
-  def apply(fileName: String): Either[Proof, Proof] = {
+  def apply(fileName: String): Either[WrongProof, Proof] = {
     var proof = new m.MutableList[Expr]
     val lines = io.Source.fromFile(fileName).getLines().toList
     val firstLine = new ExpressionParser(lines.head.replaceAll(" ", "")).derivationInputLine.run()
@@ -58,7 +58,7 @@ class Deductor {
     apply(firstLine.get._1, Some(firstLine.get._2), proof)
   }
 
-  def apply(context: Seq[Expr], beta: Option[Expr], proof: Seq[Expr]): Either[Proof, Proof] = {
+  def apply(context: Seq[Expr], beta: Option[Expr], proof: Seq[Expr]): Either[WrongProof, Proof] = {
     if (beta.isEmpty) {
       println("Нужна бета!")
       return null

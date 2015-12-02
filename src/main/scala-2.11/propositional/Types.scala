@@ -5,6 +5,7 @@ import propositional.ExprTypes.Var
 import scala.collection.{mutable => m}
 
 object Types {
+
   case class Statement(line: Int, expr: Expr, annotation: Annotation) {
 
     override def toString = s"(" + line + ") " + expr + " " + annotation
@@ -43,15 +44,23 @@ object Types {
 
   case class Error(msg: String = "") extends Annotation {
 
-    override def toString = s"Не доказано" + (if (msg != null && msg != "") ": " + msg else "")
+    override def toString = "Не доказано" + (if (msg != null && msg != "") ": " + msg else "")
   }
 
-  trait ErrorReason {
+  trait ErrorReason
 
-  }
+  trait WrongProof extends ErrorReason
 
   case class NotTrue(values: String) extends ErrorReason {
-    override def toString: String = "Высказывание ложно при " + values
+    override def toString = "Высказывание ложно при " + values
+  }
+
+  case class WrongProofFromLine(lineNumber: Int) extends WrongProof {
+    override def toString = "Доказательство неверно со строки " + lineNumber
+  }
+
+  case class WrongProofWithMsg(msg: String) extends WrongProof {
+    override def toString = msg
   }
 
 }

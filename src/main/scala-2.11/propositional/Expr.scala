@@ -88,6 +88,9 @@ object ExprTypes {
   }
 
   case class Var(name: String) extends Expr {
+    if (name.head.equals('!')) {
+      println("ASDHJAHDKHAJHD : "+name)
+    }
     override def evaluate(m: Map[String, Boolean]): Boolean = {
       if (!(m contains name))
         throw new IllegalArgumentException("Can't find value for " + name)

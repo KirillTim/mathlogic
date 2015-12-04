@@ -66,13 +66,13 @@ class ProofMaker {
               proofsToMerge += j._2
               varToRemove = hypot.keySet.filterNot(i.keySet).head
               var context = List[Expr]()
-              for (h <- hypot if !h._1.equals(varToRemove) ) {
-                  var varAddToContext = new Var(h._1)
-                  if (!h._2) {
-                    context ++= List(new Not(varAddToContext))
-                  } else {
-                    context ++= List(varAddToContext)
-                  }
+              for (h <- hypot if !h._1.equals(varToRemove)) {
+                val varAddToContext = new Var(h._1)
+                if (!h._2) {
+                  context ++= List(new Not(varAddToContext))
+                } else {
+                  context ++= List(varAddToContext)
+                }
               }
               context ++= List(if (hypot.get(varToRemove).get) new Var(varToRemove) else new Not(new Var(varToRemove)))
               deduceContext += context
@@ -83,7 +83,7 @@ class ProofMaker {
           if (varToRemove.isEmpty)
             throw new Error("varToRemove.isEmpty")
           newProofs += (i -> mergeProofs(deduceContext.head.toSeq, deduceContext(1).toSeq,
-                                            new Var(varToRemove), beta, proofsToMerge.head, proofsToMerge(1)))
+            new Var(varToRemove), beta, proofsToMerge.head, proofsToMerge(1)))
         }
         (smallerVars, newProofs)
     }
@@ -94,11 +94,11 @@ class ProofMaker {
                   firstProof: List[Expr], secondProof: List[Expr]): List[Expr] = {
     var newProof = List[Expr]()
     val deduced0 = new Deductor().apply(firstDeduceContext, Some(firstProof.last), firstProof) match {
-      case Left(error) => throw new Error("wrong proof in deduce0 : "+error);
+      case Left(error) => throw new Error("wrong proof in deduce0 : " + error);
       case Right(proof) => proof.map((a: Statement) => a.expr)
     }
     val deduced1 = new Deductor().apply(secondDeduceContext, Some(secondProof.last), secondProof) match {
-      case Left(error) => throw new Error("wrong proof in deduce1 : "+error);
+      case Left(error) => throw new Error("wrong proof in deduce1 : " + error);
       case Right(proof) => proof.map((a: Statement) => a.expr)
     }
     newProof ++= (deduced0 ++ deduced1 ++ Proofs.tertiumNonDatur(varToRemove))

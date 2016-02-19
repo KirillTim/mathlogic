@@ -41,34 +41,30 @@ abstract class BinaryExpr(val left: Expr, val right: Expr, val priority: Int, va
 
 object ExprTypes {
 
-  /*abstract class Quantifier(varName: Var, expr: Expr) extends Expr(11) {
+  abstract class Quantifier(varName: Term, expr: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = expr.evaluate(m)
 
-    override def getVars: mutable.HashSet[String] = expr.getVars
+    override def getVars() = expr.getVars()
 
   }
 
-  case class FA(varName: Var, expr: Expr) extends Quantifier(varName, expr) {
+  case class FA(varName: Term, expr: Expr) extends Quantifier(varName, expr) {
     override def toString: String = "@" + varName + expr
 
     override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90533
   }
 
-  case class EX(varName: Var, expr: Expr) extends Quantifier(varName, expr) {
+  case class EX(varName: Term, expr: Expr) extends Quantifier(varName, expr) {
     override def toString: String = "?" + varName + expr
 
     override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90529
-  }*/
-
-  type Disj = V
+  }
 
   case class V(val a: Expr, val b: Expr) extends BinaryExpr(a, b, 9, "|") {
     override def evaluate(m: Map[String, Boolean]): Boolean = a.evaluate(m) || b.evaluate(m)
 
     override lazy val hashCode = (a.hashCode * 12569) ^ (b.hashCode * 257)
   }
-
-  type Conj = &
 
   case class &(val a: Expr, val b: Expr) extends BinaryExpr(a, b, 10, "&") {
     override def evaluate(m: Map[String, Boolean]): Boolean = a.evaluate(m) && b.evaluate(m)
@@ -136,8 +132,6 @@ object ExprTypes {
 
     override lazy val hashCode = "Predicate".hashCode ^ name.hashCode + args.mkString.hashCode
   }
-
-  type Impl = ->
 
   case class ->(var a: Expr, var b: Expr) extends BinaryExpr(a, b, 8, "->") {
     override def evaluate(m: Map[String, Boolean]): Boolean = (!a.evaluate(m)) || b.evaluate(m)

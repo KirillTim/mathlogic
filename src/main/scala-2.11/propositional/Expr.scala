@@ -1,6 +1,6 @@
 package propositional
 
-import scala.collection.mutable
+import propositional.ExprTypes.Term
 
 abstract class Expr(val opPriority: Int) {
 
@@ -8,7 +8,7 @@ abstract class Expr(val opPriority: Int) {
 
   def evaluate(m: Map[String, Boolean]): Boolean
 
-  def getVars: mutable.HashSet[String]
+  def getVars(): List[Term]
 
   protected def str2(a: Expr, b: Expr, delim: String): String = {
     var aStr = a.toString
@@ -34,7 +34,7 @@ abstract class Expr(val opPriority: Int) {
 }
 
 abstract class BinaryExpr(val left: Expr, val right: Expr, val priority: Int, val delim:String) extends Expr(priority) {
-  override lazy val getVars: mutable.HashSet[String] = left.getVars ++= right.getVars
+  override def getVars(): List[Term] = left.getVars ::: right.getVars
 
   override lazy val toString = str2(left, right, delim)
 }
@@ -79,7 +79,7 @@ object ExprTypes {
   case class Const(x: Boolean) extends Expr(20) {
     override def evaluate(m: Map[String, Boolean]): Boolean = x
 
-    override def getVars: mutable.HashSet[String] = mutable.HashSet.empty[String]
+    override def getVars(): List[Term] = List()
 
     override def toString: String = x.toString
 
@@ -99,10 +99,11 @@ object ExprTypes {
         (m get name).get
     }
 
-    override def getVars: mutable.HashSet[String] = {
+    override def getVars(): List[Term] = {
       if (args.nonEmpty)
-        throw new IllegalArgumentException("Not a Variable: " + toString)
-      new mutable.HashSet() += name
+        args.foldLeft(List[Term]())((l, t) => t.getVars ::: l)
+      else
+        List(this)
     }
 
     override def toString = {
@@ -129,7 +130,7 @@ object ExprTypes {
   case class !!(var a: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = !a.evaluate(m)
 
-    override def getVars: mutable.HashSet[String] = a.getVars
+    override def getVars(): List[Term] = a.getVars()
 
     override lazy val toString: String = a match {
       case v: Term => "!" + a.toString

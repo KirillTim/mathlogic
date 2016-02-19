@@ -21,8 +21,9 @@ class ProofMaker {
   }
 
   def makeNotAnnotatedProof(expr: Expr): List[Expr] = {
-    var curVars = expr.getVars
-    var proofs = createVarsToBoolList(curVars)
+    val curVarsList = expr.getVars().map((t:Term) => t.toString)
+    var curVars = m.HashSet[String]() ++ curVarsList
+    var proofs = createVarsToBoolList(curVarsList)
       .map((hypot: Hypothesis) => hypot -> buildProof(expr, hypot)).toMap
     while (curVars.nonEmpty) {
       val tp = removeAssumption(curVars, proofs, expr)
@@ -38,7 +39,7 @@ class ProofMaker {
     //vars.foreach(s => print(s+", "))
     //println("beta= "+beta)
     val smallerVars = vars.init
-    val smallerHypothesisList = createVarsToBoolList(smallerVars)
+    val smallerHypothesisList = createVarsToBoolList(smallerVars.toList)
     var newProofs = Map[Hypothesis, List[Expr]]()
     smallerVars.isEmpty match {
       case true =>
@@ -124,12 +125,12 @@ class ProofMaker {
     true
   }
 
-  def createVarsToBoolList(vars: m.HashSet[String]): List[Hypothesis] = {
+  def createVarsToBoolList(vars: List[String]/*m.HashSet[String]*/): List[Hypothesis] = {
     gen(vars.size).map(x => vars.zip(x).toMap)
   }
 
   def whenFalse(expr: Expr): Option[Hypothesis] = {
-    createVarsToBoolList(expr.getVars)
+    createVarsToBoolList(expr.getVars().map(t => t.toString))
       .map((x: Hypothesis) => if (!expr.evaluate(x)) Some(x) else None)
       .find({
         case Some(_) => true

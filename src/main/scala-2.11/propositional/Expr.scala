@@ -114,23 +114,6 @@ object ExprTypes {
     }
 
     override lazy val hashCode = name.hashCode + args.mkString(",").hashCode
-
-  }
-
-  case class Var(val name: String) extends Expr(20) {
-
-    override def evaluate(m: Map[String, Boolean]): Boolean = {
-      if (!(m contains name))
-        throw new IllegalArgumentException("Can't find value for " + name)
-      else
-        (m get name).get
-    }
-
-    override def getVars: mutable.HashSet[String] = new mutable.HashSet() += name
-
-    override def toString: String = name
-
-    override lazy val hashCode = name.hashCode
   }
 
   type Impl = ->

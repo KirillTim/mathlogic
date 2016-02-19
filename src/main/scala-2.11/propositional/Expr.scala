@@ -2,20 +2,20 @@ package propositional
 
 import scala.collection.mutable
 
-trait Expr {
+abstract class Expr(val opPriority: Int) {
+
   import ExprTypes._
+
   def evaluate(m: Map[String, Boolean]): Boolean
-  var oldHash = -1
-  val priority: Int
 
-  def getVars : mutable.HashSet[String]
+  def getVars: mutable.HashSet[String]
 
-  def str2(a: Expr, b: Expr, delim: String): String = {
+  protected def str2(a: Expr, b: Expr, delim: String): String = {
     var aStr = a.toString
     var bStr = b.toString
-    if (this.priority >= a.priority)
+    if (this.opPriority >= a.opPriority)
       aStr = "(" + aStr + ")"
-    if (this.priority >= b.priority)
+    if (this.opPriority >= b.opPriority)
       bStr = "(" + bStr + ")"
     aStr + delim + bStr
   }
@@ -32,65 +32,74 @@ trait Expr {
 
   def !!(other: Expr): !! = new !!(this)
 }
+
+abstract class BinaryExpr(val left: Expr, val right: Expr, val priority: Int, val delim:String) extends Expr(priority) {
+  override lazy val getVars: mutable.HashSet[String] = left.getVars ++= right.getVars
+
+  override lazy val toString = str2(left, right, delim)
+}
+
 object ExprTypes {
 
+  abstract class Quantifier(varName: Var, expr: Expr) extends Expr(11) {
+    override def evaluate(m: Map[String, Boolean]): Boolean = expr.evaluate(m)
+
+    override def getVars: mutable.HashSet[String] = expr.getVars
+
+  }
+
+  case class FA(varName: Var, expr: Expr) extends Quantifier(varName, expr) {
+    override def toString: String = "@" + varName + expr
+
+    override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90533
+  }
+
+  case class EX(varName: Var, expr: Expr) extends Quantifier(varName, expr) {
+    override def toString: String = "?" + varName + expr
+
+    override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90529
+  }
+
   type Disj = V
-  case class V(var a: Expr, var b: Expr) extends Expr {
+
+  case class V(val a: Expr, val b: Expr) extends BinaryExpr(a, b, 9, "|") {
     override def evaluate(m: Map[String, Boolean]): Boolean = a.evaluate(m) || b.evaluate(m)
 
-    val priority: Int = 9
-
-    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
-
-    override def toString: String = str2(a, b, "|")
-
-    override def hashCode: Int = {
-      if (oldHash == -1) {
-        oldHash = (a.hashCode * 12569) ^ (b.hashCode * 257)
-      }
-      oldHash
-    }
+    override lazy val hashCode = (a.hashCode * 12569) ^ (b.hashCode * 257)
   }
 
   type Conj = &
-  case class &(var a: Expr, var b: Expr) extends Expr {
+
+  case class &(val a: Expr, val b: Expr) extends BinaryExpr(a, b, 10, "&") {
     override def evaluate(m: Map[String, Boolean]): Boolean = a.evaluate(m) && b.evaluate(m)
 
-    val priority: Int = 10
-
-    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
-
-    override def toString: String = str2(a, b, "&")
-
-    override def hashCode: Int = {
-      if (oldHash == -1) {
-        oldHash = (a.hashCode * 8647) ^ (b.hashCode * 257)
-      }
-      oldHash
-    }
+    override lazy val hashCode = (a.hashCode * 8647) ^ (b.hashCode * 257)
   }
 
-  case class Const(x: Boolean) extends Expr {
+  case class Const(x: Boolean) extends Expr(20) {
     override def evaluate(m: Map[String, Boolean]): Boolean = x
 
-    override val priority: Int = 20
-
-    override def getVars : mutable.HashSet[String] = mutable.HashSet.empty[String]
+    override def getVars: mutable.HashSet[String] = mutable.HashSet.empty[String]
 
     override def toString: String = x.toString
 
-    override def hashCode(): Int = {
-      if (oldHash == -1) {
-        oldHash = if (x) 1231 else 1237
-      }
-      oldHash
-    }
+    override lazy val hashCode = if (x) 1231 else 1237
   }
 
-  case class Var(name: String) extends Expr {
-    if (name.head.equals('!')) {
-      println("ASDHJAHDKHAJHD : "+name)
+  case class Var(val name: String) extends Expr(20) {
+    def isFree(expr: Expr): Boolean = expr match {
+      case FA(x, e) => if (x.name.equals(name)) false else isFree(e)
+      case EX(x, e) => if (x.name.equals(name)) false else isFree(e)
+      case a -> b => isFree(a) || isFree(b)
+      case a V b => isFree(a) || isFree(b)
+      case a & b => isFree(a) || isFree(b)
+      case !!(a) => isFree(a)
     }
+
+    def canSubstitute(toChange: Var, expr: Expr): Boolean = {
+      false
+    }
+
     override def evaluate(m: Map[String, Boolean]): Boolean = {
       if (!(m contains name))
         throw new IllegalArgumentException("Can't find value for " + name)
@@ -98,59 +107,36 @@ object ExprTypes {
         (m get name).get
     }
 
-    override val priority: Int = 20
-
-    override def getVars : mutable.HashSet[String] = new mutable.HashSet() += name
+    override def getVars: mutable.HashSet[String] = new mutable.HashSet() += name
 
     override def toString: String = name
 
-    override def hashCode: Int = {
-      if (oldHash == -1) {
-        oldHash = name.hashCode
-      }
-      oldHash
-    }
+    override lazy val hashCode = name.hashCode
   }
 
   type Impl = ->
-  case class ->(var a: Expr, var b: Expr) extends Expr {
+
+  case class ->(var a: Expr, var b: Expr) extends BinaryExpr(a, b, 8, "->") {
     override def evaluate(m: Map[String, Boolean]): Boolean = (!a.evaluate(m)) || b.evaluate(m)
 
-    override val priority: Int = 8
-
-    override def getVars : mutable.HashSet[String] = a.getVars ++= b.getVars
-
-    override def toString: String = str2(a, b, "->")
-
-    override def hashCode: Int = {
-      if (oldHash == -1) {
-        oldHash = (a.hashCode * 15137) ^ (b.hashCode * 257)
-      }
-      oldHash
-    }
+    override lazy val hashCode = (a.hashCode * 15137) ^ (b.hashCode * 257)
   }
 
   type Not = !!
-  case class !!(var a: Expr) extends Expr {
+
+  case class !!(var a: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = !a.evaluate(m)
 
-    override val priority: Int = 11
+    override def getVars: mutable.HashSet[String] = a.getVars
 
-    override def getVars : mutable.HashSet[String] = a.getVars
-
-    override def toString: String = a match {
+    override lazy val toString: String = a match {
       case v: Var => "!" + a.toString
       case v: Const => "!" + a.toString
       case v: Not => "!" + a.toString
       case _ => "!(" + a.toString + ")"
     }
 
-    override def hashCode: Int = {
-      if (oldHash == -1) {
-        oldHash = (a.hashCode ^ 29611) * 40241
-      }
-      oldHash
-    }
+    override lazy val hashCode = (a.hashCode ^ 29611) * 40241
   }
 
 }

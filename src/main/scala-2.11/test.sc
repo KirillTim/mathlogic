@@ -1,5 +1,6 @@
-var q = 1; var w = 2//(q, w) = (1,2)
-q += 1
-w += 2
+def test(a:Int, b:Int*) = {
+  println(b.isEmpty)
+  println("a="+a+", b:"+b.mkString(","))
+}
 
-q+w
+test(1)

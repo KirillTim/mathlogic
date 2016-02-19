@@ -114,7 +114,27 @@ object ExprTypes {
       else name +"(" + args.mkString(",") +")"
     }
 
-    override lazy val hashCode = name.hashCode + args.mkString(",").hashCode
+    override lazy val hashCode = "Term".hashCode ^ name.hashCode + args.mkString.hashCode
+  }
+
+  case class Predicate(val name:String, val args:Term*) extends Expr(20) {
+    val commonPredicates = Seq("=", "*", "+")
+
+    override def evaluate(m: Map[String, Boolean]): Boolean = {
+      throw new UnsupportedOperationException("Can't evaluate predicate: " + toString)
+    }
+
+    override def getVars(): List[Term] = args.foldLeft(List[Term]())((l, t) => t.getVars ::: l)
+
+    override def toString = {
+      if (args.length == 2 && commonPredicates.contains(name))
+        args(0) + " " + name + " " + args(1)
+      else if (name == "'") args(0) + "'"
+      else if (args.isEmpty) name
+      else name +"(" + args.mkString(",") +")"
+    }
+
+    override lazy val hashCode = "Predicate".hashCode ^ name.hashCode + args.mkString.hashCode
   }
 
   type Impl = ->

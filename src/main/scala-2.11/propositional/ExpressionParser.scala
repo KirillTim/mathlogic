@@ -1,7 +1,7 @@
 package propositional
 
-import ExprTypes._
 import org.parboiled2._
+import propositional.ExprTypes._
 
 class ExpressionParser(val input: ParserInput) extends Parser {
 
@@ -53,7 +53,7 @@ class ExpressionParser(val input: ParserInput) extends Parser {
 
   private def variable: Rule1[Expr] = rule {
     capture(upper) ~> ((a: String) => {
-      new Var(a)
+      new Term(a)
     })
   }
 

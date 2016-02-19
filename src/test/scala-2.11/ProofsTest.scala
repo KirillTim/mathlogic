@@ -1,12 +1,12 @@
-import propositional.ExprTypes.{!!, Var}
+import propositional.ExprTypes.{!!, Term}
 import propositional.Proofs._
-import propositional.{Expr, Checker}
+import propositional.{Checker, Expr}
 
 object ProofsTest {
   val checker = new Checker()
   def main(args: Array[String]) {
-    val varA = new Var("A")
-    val varB = new Var("B")
+    val varA = new Term("A")
+    val varB = new Term("B")
     val contextFF = Seq(!!(varA), !!(varB))
     val contextFT = Seq(!!(varA), varB)
     val contextTF = Seq(varA, !!(varB))

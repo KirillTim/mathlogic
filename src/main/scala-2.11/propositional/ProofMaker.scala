@@ -1,6 +1,6 @@
 package propositional
 
-import propositional.ExprTypes.{!!, Not, Var}
+import propositional.ExprTypes.{!!, Not, Term}
 import propositional.Proofs.buildProof
 import propositional.Types.{ErrorReason, NotTrue, Proof, Statement}
 
@@ -45,17 +45,17 @@ class ProofMaker {
         var deduceContext0 = List[Expr]()
         var deduceContext1 = List[Expr]()
         if (proofs.head._1.head._2) {
-          deduceContext0 ++= List(new Var(proofs.head._1.head._1))
+          deduceContext0 ++= List(new Term(proofs.head._1.head._1))
         } else {
-          deduceContext0 ++= List(new Not(new Var(proofs.head._1.head._1)))
+          deduceContext0 ++= List(new Not(new Term(proofs.head._1.head._1)))
         }
         if (proofs.last._1.head._2) {
-          deduceContext1 ++= List(new Var(proofs.last._1.head._1))
+          deduceContext1 ++= List(new Term(proofs.last._1.head._1))
         } else {
-          deduceContext1 ++= List(new Not(new Var(proofs.last._1.head._1)))
+          deduceContext1 ++= List(new Not(new Term(proofs.last._1.head._1)))
         }
         (smallerVars, List(Map.empty[String, Boolean]
-          -> mergeProofs(deduceContext0, deduceContext1, new Var(vars.last), beta, proofs.head._2, proofs.last._2)).toMap)
+          -> mergeProofs(deduceContext0, deduceContext1, new Term(vars.last), beta, proofs.head._2, proofs.last._2)).toMap)
       case false =>
         for (i <- smallerHypothesisList) {
           var proofsToMerge = m.MutableList[List[Expr]]()
@@ -68,14 +68,14 @@ class ProofMaker {
               varToRemove = hypot.keySet.filterNot(i.keySet).head
               var context = List[Expr]()
               for (h <- hypot if !h._1.equals(varToRemove)) {
-                val varAddToContext = new Var(h._1)
+                val varAddToContext = new Term(h._1)
                 if (!h._2) {
                   context ++= List(new Not(varAddToContext))
                 } else {
                   context ++= List(varAddToContext)
                 }
               }
-              context ++= List(if (hypot.get(varToRemove).get) new Var(varToRemove) else new Not(new Var(varToRemove)))
+              context ++= List(if (hypot.get(varToRemove).get) new Term(varToRemove) else new Not(new Term(varToRemove)))
               deduceContext += context
             }
           }
@@ -84,14 +84,14 @@ class ProofMaker {
           if (varToRemove.isEmpty)
             throw new Error("varToRemove.isEmpty")
           newProofs += (i -> mergeProofs(deduceContext.head.toSeq, deduceContext(1).toSeq,
-            new Var(varToRemove), beta, proofsToMerge.head, proofsToMerge(1)))
+            new Term(varToRemove), beta, proofsToMerge.head, proofsToMerge(1)))
         }
         (smallerVars, newProofs)
     }
   }
 
 
-  def mergeProofs(firstDeduceContext: Seq[Expr], secondDeduceContext: Seq[Expr], varToRemove: Var, beta: Expr,
+  def mergeProofs(firstDeduceContext: Seq[Expr], secondDeduceContext: Seq[Expr], varToRemove: Term, beta: Expr,
                   firstProof: List[Expr], secondProof: List[Expr]): List[Expr] = {
     var newProof = List[Expr]()
     val deduced0 = new Deductor().apply(firstDeduceContext, Some(firstProof.last), firstProof) match {

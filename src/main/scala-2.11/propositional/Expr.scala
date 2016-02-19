@@ -41,7 +41,7 @@ abstract class BinaryExpr(val left: Expr, val right: Expr, val priority: Int, va
 
 object ExprTypes {
 
-  abstract class Quantifier(varName: Var, expr: Expr) extends Expr(11) {
+  /*abstract class Quantifier(varName: Var, expr: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = expr.evaluate(m)
 
     override def getVars: mutable.HashSet[String] = expr.getVars
@@ -58,7 +58,7 @@ object ExprTypes {
     override def toString: String = "?" + varName + expr
 
     override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90529
-  }
+  }*/
 
   type Disj = V
 
@@ -86,19 +86,38 @@ object ExprTypes {
     override lazy val hashCode = if (x) 1231 else 1237
   }
 
-  case class Var(val name: String) extends Expr(20) {
-    def isFree(expr: Expr): Boolean = expr match {
-      case FA(x, e) => if (x.name.equals(name)) false else isFree(e)
-      case EX(x, e) => if (x.name.equals(name)) false else isFree(e)
-      case a -> b => isFree(a) || isFree(b)
-      case a V b => isFree(a) || isFree(b)
-      case a & b => isFree(a) || isFree(b)
-      case !!(a) => isFree(a)
+  case class Term(val name:String, val args:Term*) extends Expr(20) {
+    val commonPredicates = Seq("=", "*", "+")
+
+    override def evaluate(m: Map[String, Boolean]): Boolean = {
+      if (args.nonEmpty)
+        throw new IllegalArgumentException("Not a Variable: " + toString)
+
+      if (!(m contains name))
+          throw new IllegalArgumentException("Can't find value for " + name)
+      else
+        (m get name).get
     }
 
-    def canSubstitute(toChange: Var, expr: Expr): Boolean = {
-      false
+    override def getVars: mutable.HashSet[String] = {
+      if (args.nonEmpty)
+        throw new IllegalArgumentException("Not a Variable: " + toString)
+      new mutable.HashSet() += name
     }
+
+    override def toString = {
+      if (args.length == 2 && commonPredicates.contains(name))
+        args(0) + " " + name + " " + args(1)
+      else if (name == "'") args(0) + "'"
+      else if (args.isEmpty) name
+      else name +"(" + args.mkString(",") +")"
+    }
+
+    override lazy val hashCode = name.hashCode + args.mkString(",").hashCode
+
+  }
+
+  case class Var(val name: String) extends Expr(20) {
 
     override def evaluate(m: Map[String, Boolean]): Boolean = {
       if (!(m contains name))
@@ -130,7 +149,7 @@ object ExprTypes {
     override def getVars: mutable.HashSet[String] = a.getVars
 
     override lazy val toString: String = a match {
-      case v: Var => "!" + a.toString
+      case v: Term => "!" + a.toString
       case v: Const => "!" + a.toString
       case v: Not => "!" + a.toString
       case _ => "!(" + a.toString + ")"

@@ -1,9 +1,10 @@
 package propositional
 
-import propositional.ExprTypes.{Not, !!, Var}
-import propositional.Types.{Statement, NotTrue, ErrorReason, Proof}
-import scala.collection.{mutable => m}
+import propositional.ExprTypes.{!!, Not, Var}
 import propositional.Proofs.buildProof
+import propositional.Types.{ErrorReason, NotTrue, Proof, Statement}
+
+import scala.collection.{mutable => m}
 
 class ProofMaker {
   type Hypothesis = Map[String, Boolean]
@@ -139,11 +140,10 @@ class ProofMaker {
     }
   }
 
-  private def varsToString(m: Map[String, Boolean]): String = {
-    var q = ""
-    m.keys.foreach((x: String) => q += (x + "=" + (if (m.get(x).get) "И" else "Л") + ", "))
-    q.take(q.length - 2)
-  }
+  private def varsToString(m: Map[String, Boolean]) =
+    m.keys.fold("") {
+      (z, x) => z + x + "=" + (if (m.get(x).get) "И" else "Л") + ", "
+    }.dropRight(2)
 
   private def gen(i: Int): List[List[Boolean]] = i match {
     case 0 => List()

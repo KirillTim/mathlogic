@@ -8,7 +8,7 @@ abstract class Expr(val opPriority: Int) {
 
   def evaluate(m: Map[String, Boolean]): Boolean
 
-  def getVars(): List[Term]
+  def getVars: List[Term]
 
   protected def str2(a: Expr, b: Expr, delim: String): String = {
     var aStr = a.toString
@@ -34,7 +34,7 @@ abstract class Expr(val opPriority: Int) {
 }
 
 abstract class BinaryExpr(val left: Expr, val right: Expr, val priority: Int, val delim:String) extends Expr(priority) {
-  override def getVars(): List[Term] = left.getVars ::: right.getVars
+  override def getVars: List[Term] = left.getVars ::: right.getVars
 
   override lazy val toString = str2(left, right, delim)
 }
@@ -44,7 +44,7 @@ object ExprTypes {
   abstract class Quantifier(varName: Term, expr: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = expr.evaluate(m)
 
-    override def getVars() = expr.getVars()
+    override def getVars = expr.getVars
 
   }
 
@@ -75,7 +75,7 @@ object ExprTypes {
   case class Const(x: Boolean) extends Expr(20) {
     override def evaluate(m: Map[String, Boolean]): Boolean = x
 
-    override def getVars(): List[Term] = List()
+    override def getVars: List[Term] = List()
 
     override def toString: String = x.toString
 
@@ -95,7 +95,7 @@ object ExprTypes {
         (m get name).get
     }
 
-    override def getVars(): List[Term] = {
+    override def getVars: List[Term] = {
       if (args.nonEmpty)
         args.foldLeft(List[Term]())((l, t) => t.getVars ::: l)
       else
@@ -120,7 +120,7 @@ object ExprTypes {
       throw new UnsupportedOperationException("Can't evaluate predicate: " + toString)
     }
 
-    override def getVars(): List[Term] = args.foldLeft(List[Term]())((l, t) => t.getVars ::: l)
+    override def getVars: List[Term] = args.foldLeft(List[Term]())((l, t) => t.getVars ::: l)
 
     override def toString = {
       if (args.length == 2 && commonPredicates.contains(name))
@@ -144,7 +144,7 @@ object ExprTypes {
   case class !!(var a: Expr) extends Expr(11) {
     override def evaluate(m: Map[String, Boolean]): Boolean = !a.evaluate(m)
 
-    override def getVars(): List[Term] = a.getVars()
+    override def getVars = a.getVars
 
     override lazy val toString: String = a match {
       case v: Term => "!" + a.toString

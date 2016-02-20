@@ -66,6 +66,7 @@ object ExprTypes {
     override lazy val hashCode = (a.hashCode * 12569) ^ (b.hashCode * 257)
   }
 
+  type Conj = &
   case class &(val a: Expr, val b: Expr) extends BinaryExpr(a, b, 10, "&") {
     override def evaluate(m: Map[String, Boolean]): Boolean = a.evaluate(m) && b.evaluate(m)
 
@@ -133,6 +134,7 @@ object ExprTypes {
     override lazy val hashCode = "Predicate".hashCode ^ name.hashCode + args.mkString.hashCode
   }
 
+  type Impl = ->
   case class ->(var a: Expr, var b: Expr) extends BinaryExpr(a, b, 8, "->") {
     override def evaluate(m: Map[String, Boolean]): Boolean = (!a.evaluate(m)) || b.evaluate(m)
 

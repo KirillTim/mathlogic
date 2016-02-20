@@ -16,60 +16,42 @@ class ExpressionParser(val input: ParserInput) extends Parser {
       EOI
   }
 
-  private def expression: Rule1[Expr] = rule {
-    oneOrMore(disjunction).separatedBy("->") ~>
-      ((a: Seq[Expr]) => {
-        a.reduceRight(->)
-      })
-  }
+  private def leftAssoc[A](a: => Rule1[A], b: (A, A) => A, divider: String): Rule1[A]
+  = rule { a ~ zeroOrMore(divider ~ a ~> b) }
 
-  private def disjunction: Rule1[Expr] = rule {
-    oneOrMore(conjunction).separatedBy("|") ~>
-      ((a: Seq[Expr]) => {
-        a.reduceLeft(V)
-      })
-  }
+  private def expression: Rule1[Expr] = rule { disjunction ~ zeroOrMore("->" ~ expression ~> ExprTypes.->) }
+  private def disjunction: Rule1[Expr] = rule { conjunction ~ zeroOrMore("|" ~ conjunction ~> V) }
+  private def conjunction: Rule1[Expr] = rule { unary ~ zeroOrMore("&" ~ unary ~> ExprTypes.&) }
 
-  private def conjunction: Rule1[Expr] = rule {
-    oneOrMore(unary).separatedBy("&") ~>
-      ((a: Seq[Expr]) => {
-        a.reduceLeft(ExprTypes.&)
-      })
-  }
-
-  private def unary: Rule1[Expr] = rule {
-    negate | variable | parens
-  }
-
-  private def negate: Rule1[Expr] = rule {
-    "!" ~ unary ~> ((a: Expr) => {
-      new !!(a)
-    })
-  }
-
-  private def parens: Rule1[Expr] = rule {
-    "(" ~ expression ~ ")"
-  }
-
-  private def variable: Rule1[Expr] = rule {
-    capture(upper) ~> ((a: String) => {
-      new Term(a)
-    })
-  }
-
-  private def upper: Rule0 =
+  private def unary: Rule1[Expr] = rule { predicate | negation | parens | ("@" ~ variable ~ unary ~> ((a, b) => FA(a, b))) |
+    ("?" ~ variable ~ unary ~> ((a, b) => EX(a, b))) }
+  def predicate: Rule1[Expr] = rule { term ~ "=" ~ term ~> ((a: Term, b: Term) => Predicate("=", a, b)) |
+    capture(oneOrMore(CharPredicate.UpperAlpha) ~ zeroOrMore(CharPredicate.AlphaNum)) ~ optional("(" ~ zeroOrMore(term).separatedBy(",") ~ ")") ~>
+      ((a: String, b:Option[Seq[Term]]) => if (b.isEmpty) Term(a) else Predicate(a, b.get: _*)) | term }
+  def term: Rule1[Term] =
+    leftAssoc(summable, (a: Term, b: Term) => Term("+", a, b), "+")
+  private def summable: Rule1[Term] =
+    leftAssoc(mullable, (a: Term, b: Term) => Term("*", a, b), "*")
+  private def mullable: Rule1[Term] =
     rule {
-      anyOf("QWERTYUIOPASDFGHJKLZXCVBNM") ~ zeroOrMore(anyOf("0123456789"))
-    }
+      ((capture(CharPredicate.LowerAlpha) ~
+        "(" ~
+        oneOrMore(term).separatedBy(",") ~
+        ")" ~>
+        ((a: String, b: Seq[Term]) => Term(a, b: _*))) |
+        variable |
+        ("(" ~ term ~ ")") |
+        (str("0") ~> (() => Term("0")))) ~
+        zeroOrMore(capture("'")) ~> ((a: Term, b: Seq[_]) => wrapInQuote(a, b.length)) }
 
-  private def lowerE: Rule0 =
-    rule {
-      anyOf("pyfgcrlaoeuidhtnsqjkxbmwvz") ~ zeroOrMore(anyOf("0123456789"))
-    }
+  private def wrapInQuote(e: Term, n: Int): Term = {
+    if (n < 1) e else wrapInQuote(Term("'", e), n - 1)
+  }
 
-  private def lower: Rule0 =
-    rule {
-      anyOf("pyfgcrlaoeuidhtnsqjkxbmwvz")
-    }
-
+  private def negation: Rule1[Expr] = rule { "!" ~ unary ~> !! }
+  private def variable: Rule1[Term] = rule { capture(letters) ~> ((a: String) => Term(a)) }
+  private def letters: Rule0 = rule { oneOrMore(CharPredicate.LowerAlpha) ~ zeroOrMore(CharPredicate.Digit) }
+  private def parens: Rule1[Expr] = rule { "(" ~ expression ~ ")" }
 }
+
+

@@ -10,12 +10,27 @@ abstract class Expr(val opPriority: Int) {
     case EX(y, phi) => phi.isFreeForSubstitution(e, x, affectedVars + y)
     case ->(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
     case V(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
-    case ExprTypes.&(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
+    case &(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
     case t@Term(name) if affectedVars.contains(t) && name == x.toString => false
     case Term(name) if name == x.toString => e.getVars.forall(!affectedVars.contains(_))
     case Term(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
     case Predicate(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
     case _ => true
+  }
+
+  def entersFree(e: Term, affectedVars: Set[Term] = Set()): Boolean = {
+    this match {
+      case FA(x, b) => b.entersFree(e, affectedVars + x)
+      case EX(x, b) => b.entersFree(e, affectedVars + x)
+      case ->(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
+      case V(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
+      case &(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
+      case !!(a) => a.entersFree(e, affectedVars)
+      case t@Term(_) if t == e => !affectedVars.contains(t)
+      case Term(name, b@_*) => b.exists(_.entersFree(e, affectedVars))
+      case Predicate(name, b@_*) => b.exists(_.entersFree(e, affectedVars))
+      case _ => false
+    }
   }
 
   def evaluate(m: Map[String, Boolean]): Boolean

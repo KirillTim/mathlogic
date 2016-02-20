@@ -3,8 +3,20 @@ package propositional
 import propositional.ExprTypes.Term
 
 abstract class Expr(val opPriority: Int) {
-
   import ExprTypes._
+
+  def isFreeForSubstitution(e: Expr, x: Term, affectedVars: Set[Term] = Set()): Boolean = this match {
+    case FA(y, phi) => phi.isFreeForSubstitution(e, x, affectedVars + y)
+    case EX(y, phi) => phi.isFreeForSubstitution(e, x, affectedVars + y)
+    case ->(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
+    case V(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
+    case ExprTypes.&(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
+    case t@Term(name) if affectedVars.contains(t) && name == x.toString => false
+    case Term(name) if name == x.toString => e.getVars.forall(!affectedVars.contains(_))
+    case Term(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
+    case Predicate(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
+    case _ => true
+  }
 
   def evaluate(m: Map[String, Boolean]): Boolean
 

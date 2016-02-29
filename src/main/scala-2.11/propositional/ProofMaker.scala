@@ -21,7 +21,7 @@ class ProofMaker {
   }
 
   def makeNotAnnotatedProof(expr: Expr): List[Expr] = {
-    val curVarsList = expr.getVars().map((t:Term) => t.toString)
+    val curVarsList = expr.getVars.map((t:Term) => t.toString)
     var curVars = m.HashSet[String]() ++ curVarsList
     var proofs = createVarsToBoolList(curVarsList)
       .map((hypot: Hypothesis) => hypot -> buildProof(expr, hypot)).toMap
@@ -130,7 +130,7 @@ class ProofMaker {
   }
 
   def whenFalse(expr: Expr): Option[Hypothesis] = {
-    createVarsToBoolList(expr.getVars().map(t => t.toString))
+    createVarsToBoolList(expr.getVars.map(t => t.toString))
       .map((x: Hypothesis) => if (!expr.evaluate(x)) Some(x) else None)
       .find({
         case Some(_) => true

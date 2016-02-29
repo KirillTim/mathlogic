@@ -37,8 +37,8 @@ class Checker {
           case _ =>
         }
         val num = Util.axiomNumber(expr)
-        if (num != -1) {
-          proof += new Statement(lineNumber, expr, new Axiom(num))
+        if (num.isDefined) {
+          proof += new Statement(lineNumber, expr, num.get)
         } else if (context.contains(expr)) {
           proof += new Statement(lineNumber, expr, new Assumption())
         } else {

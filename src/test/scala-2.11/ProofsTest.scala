@@ -35,7 +35,7 @@ object ProofsTest {
   }
 
   def isCorrect(context:Seq[Expr], proof:List[Expr]) = {
-    val res = checker.apply(context, None, proof)
+    val res = checker.apply2(context, None, proof)
     res match {
       case Left(error) => println(context + "\t[Failed] : " + error); false
       case Right(pr) => println(context + "\t[OK]"); true

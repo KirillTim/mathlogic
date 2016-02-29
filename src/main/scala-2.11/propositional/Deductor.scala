@@ -9,7 +9,7 @@ class Deductor {
 
   def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Either[WrongProof, Proof] = {
     val alpha = context.last
-    new Checker().apply(context.init, Some(context.last ->: beta), proof.map((st: Statement) => {
+    new Checker().apply2(context.init, Some(context.last ->: beta), proof.map((st: Statement) => {
       st match {
         case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
         case Statement(_, e: Expr, a: Annotation) if e != alpha =>
@@ -63,7 +63,7 @@ class Deductor {
       println("Нужна бета!")
       return null
     }
-    new Checker().apply(context, beta, proof) match {
+    new Checker().apply2(context, beta, proof) match {
       case Left(error) => Left(error)
       case Right(correct) => deduce(correct, context, beta.get)
     }

@@ -1,9 +1,6 @@
 package propositional
 
 import ExprTypes._
-import _root_.mathlogic.propositionalCalculus.Axiom
-import _root_.mathlogic.propositionalCalculus.Forall
-import _root_.mathlogic.propositionalCalculus.Implication
 import propositional.Types.{NotFreeForSubstitution, WrongProof, Axiom}
 
 object Util {

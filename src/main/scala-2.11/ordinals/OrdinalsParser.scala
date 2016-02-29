@@ -15,10 +15,6 @@ case class OrdinalsParser() {
   class ParboiledParser(val input: ParserInput) extends Parser {
     type Ord = Rule1[Ordinal]
 
-    implicit private def wrpStr(s: String): Rule0 = rule {
-      zeroOrMore(' ') ~ str(s) ~ zeroOrMore(' ')
-    }
-
     def equals: Rule1[Seq[Ordinal]] = rule {
       oneOrMore(ordinal).separatedBy("=")
     }

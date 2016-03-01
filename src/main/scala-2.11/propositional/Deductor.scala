@@ -17,6 +17,8 @@ class Deductor {
             case Axiom(_) => case1(st, alpha)
             case Assumption() => case1(st, alpha)
             case MP(j: Statement, k: Statement) => case3(st, j, alpha)
+            case InferFA(_) => ???
+            case InferEX(_) => ???
           }
         //case _ =>
       }

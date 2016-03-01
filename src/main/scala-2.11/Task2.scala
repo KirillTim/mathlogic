@@ -5,7 +5,8 @@ import propositional.Types.Statement
 
 object Task2 {
   def main(args: Array[String]): Unit = {
-    val fileName = if (args.length == 0 || args(0) == "") "data/HW2/contra2.in" else args(0)
+    //val fileName = if (args.length == 0 || args(0) == "") "data/HW2/contra2.in" else args(0)
+    val fileName = "data/HW2/test.in"
     val start = System.currentTimeMillis()
     val pw = new PrintWriter(new File(fileName + ".hw2.out"))
     new Deductor().apply(fileName) match {
@@ -13,7 +14,7 @@ object Task2 {
         pw.write(error.toString)
       case Right(correct) =>
         correct.foreach((line: Statement) => {
-          pw.write(line + "\n")
+          pw.write(line.expr + "\n")
         })
     }
     val total = System.currentTimeMillis() - start

@@ -1,5 +1,6 @@
 package propositional
 
+import propositional.ExprTypes.{Term, FA, ->, EX}
 import propositional.Types._
 
 import scala.util.Try
@@ -9,7 +10,27 @@ class Deductor {
 
   def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Either[WrongProof, Proof] = {
     val alpha = context.last
-    new Checker().apply2(context.init, Some(context.last ->: beta), proof.map((st: Statement) => {
+
+    var tmp = List[Expr]()
+    proof.foreach((st: Statement) => {
+      //println("len= "+tmp.length)
+      val q = st match {
+        case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
+        case Statement(_, e: Expr, a: Annotation) if e != alpha =>
+          a match {
+            case Axiom(_) => case1(st, alpha)
+            case Assumption() => case1(st, alpha)
+            case MP(j: Statement, k: Statement) => case3(st, j, alpha)
+            case InferFA(_) => caseFA(st, alpha)
+            case InferEX(_) => caseEX(st, alpha)
+          }
+        //case _ =>
+      }
+      tmp = tmp ++ q
+    })
+
+    new Checker().apply2(context.init, Some(context.last ->: beta), tmp)/*proof.map((st: Statement) => {
+      //println("now at: "+st)
       st match {
         case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
         case Statement(_, e: Expr, a: Annotation) if e != alpha =>
@@ -17,12 +38,12 @@ class Deductor {
             case Axiom(_) => case1(st, alpha)
             case Assumption() => case1(st, alpha)
             case MP(j: Statement, k: Statement) => case3(st, j, alpha)
-            case InferFA(_) => ???
-            case InferEX(_) => ???
+            case InferFA(_) => caseFA(st, alpha)
+            case InferEX(_) => caseEX(st, alpha)
           }
         //case _ =>
       }
-    }).flatMap((a:List[Expr]) => a))
+    }).flatMap((a: List[Expr]) => a))*/
   }
 
   private def case1(di: Statement, alpha: Expr): List[Expr] = {
@@ -39,11 +60,47 @@ class Deductor {
     List(line1, line2, line3, line4, line5)
   }
 
-  private def case3(di: Statement, dj:Statement, alpha: Expr): List[Expr] = {
+  private def case3(di: Statement, dj: Statement, alpha: Expr): List[Expr] = {
     val line1 = (alpha ->: dj.expr) ->: ((alpha ->: (dj.expr ->: di.expr)) ->: (alpha ->: di.expr))
     val line2 = line1.b
     val line3 = alpha ->: di.expr
     List(line1, line2, line3)
+  }
+
+  def deduceFA(what:Expr, alpha: Expr): List[Expr] = {
+    what match {
+      case ->(phi, FA(x, psi)) =>
+        Deductions.lemma1FA(alpha, phi, FA(x, psi)) ++
+        Deductions.lemma2FA(alpha, phi, psi) ++
+        List(
+          alpha ->: (phi ->: psi),
+          (alpha & phi) ->: psi,
+          (alpha & phi) ->: FA(x, psi),
+          alpha ->: (phi ->: FA(x, psi))
+        )
+      case _ => throw new IllegalArgumentException("wtf")
+    }
+  }
+
+  private def caseFA(st: Statement, alpha: Expr): List[Expr] = {
+    deduceFA(st.expr, alpha)
+  }
+
+  def deduceEX(what: Expr, alpha: Expr): List[Expr] = {
+    what match {
+      case ->(EX(x, psi), phi) =>
+        Deductions.lemmaEX(alpha, psi, phi) ++
+          List(alpha ->: (psi ->: phi),
+            psi ->: (alpha ->: phi),
+            EX(x, psi) ->: (alpha ->: phi)) ++
+          Deductions.lemmaEX(EX(x, psi) , alpha, phi) ++
+          List(alpha ->: (EX(x, psi) ->: phi))
+      case _ => throw new IllegalArgumentException("wtf")
+    }
+  }
+
+  private def caseEX(st: Statement, alpha: Expr): List[Expr] = {
+    deduceEX(st.expr, alpha)
   }
 
   def apply(fileName: String): Either[WrongProof, Proof] = {

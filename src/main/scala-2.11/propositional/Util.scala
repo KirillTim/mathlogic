@@ -25,6 +25,20 @@ object Util {
       case Some(y) => !e.isFreeForSubstitution(y, x)
       case None => false
     }) => Left(NotFreeForSubstitution(substitution(e, phi).get, x, e, line))
+    case ->(Predicate("=", a, b), Predicate("=", Term("'", c), Term("'", d))) if (a, b) == (c, d) => Right(Some(Axiom(13)))
+    case ->(Predicate("=", a, b), ->(Predicate("=", c, d), Predicate("=", e, f)))
+      if (a, b) == (c, e) && d == f => Right(Some(Axiom(14)))
+    case ->(Predicate("=", Term("'", a), Term("'", b)), Predicate("=", c, d)) if (a, b) == (c, d) => Right(Some(Axiom(15)))
+    case !!(Predicate("=", Term("'", a), Term("0"))) => Right(Some(Axiom(16)))
+    case Predicate("=", Term("+", a, Term("'", b)), Term("'", Term("+", c, d))) if (a, b) == (c, d) => Right(Some(Axiom(16)))
+    case Predicate("=", Term("+", a, Term("0")), b) if a == b => Right(Some(Axiom(17)))
+    case Predicate("=", Term("*", a, Term("0"), Term("0"))) => Right(Some(Axiom(18)))
+    case Predicate("=", Term("*", a, Term("'", b)), Term("+", Term("*", c, d), e)) if (a, b) == (c, d) && a == e => Right(Some(Axiom(19)))
+    case ->(&(phi, FA(x, ->(psi, xi))), theta) if {
+      psi == theta && psi.entersFree(x) &&
+        psi.substitute(Map(x.toString -> Term("0"))) == phi &&
+        psi.substitute(Map(x.toString -> Term("'", x))) == xi
+    } => Right(Some(Axiom(20)))
     case _ => Right(None)
   }
 

@@ -51,10 +51,6 @@ object Types {
     override lazy val toString = "Доказательство неверно со строки " + lineNumber + (if (msg != "") " ("+msg+")")
   }
 
-  case class WrongProofWithMsg(msg: String) extends WrongProof {
-    override lazy val toString = msg
-  }
-
   case class NotFreeForSubstitution(t: Expr, x: Term, e: Expr, line: Int) extends WrongProof {
     override def toString = "В строке " + line + " терм " + t + " не свободен для подстановки вместо терма " + x + " формулу " + e
   }
@@ -64,7 +60,7 @@ object Types {
   }
 
   case class InferenceRuleOnFreeVar(t: Term, e: Expr, line: Int) extends WrongProof {
-    override def toString = "В строке " + line + " используется правило вывода по переменной " + t + " входящей свободно в предположение " + e
+    override def toString = "В строке " + line + " используется правило вывода по переменной '" + t + "' входящей свободно в предположение " + e
   }
 
 }

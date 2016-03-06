@@ -1,5 +1,7 @@
 package propositional
 
+import java.io.{File, PrintWriter}
+
 import Types._
 import propositional.ExprTypes._
 
@@ -8,8 +10,7 @@ import scala.collection.{mutable => m}
 class Checker {
   var lineNumber = 1
   val proof = new Proof()
-  val context = Seq[Expr]()
-  var secondToFirst = m.HashMap[Expr, m.HashMap[Expr, Int]]()
+  var context: Seq[Expr] = null
 
   type MultiMap[T, E] = m.HashMap[T, m.Set[E]] with m.MultiMap[T, E]
   val reversedImplications = new m.HashMap[Expr, m.Set[(Expr, Int)]]() with m.MultiMap[Expr, (Expr, Int)] //new MultiMap[Expr, (Expr, Int)]()
@@ -39,30 +40,42 @@ class Checker {
 
   def getMPAnnotation(expr: Expr): Either[WrongProof, Annotation] = expr match {
     case ->(phi, FA(x, psi)) if isProofed(phi ->: psi) =>
+      for (i <- context if i.entersFree(x))
+        return Left(InferenceRuleOnFreeVar(x, i, lineNumber))
       phi.entersFree(x) match {
         case false => Right(new InferFA(lineInProof(expr).getOrElse(0))) //0 == expr was in assumption
-        case true => Left(new InferenceRuleOnFreeVar(x, expr, lineNumber))
+        case true => Left(new EntersFreely(x, expr, lineNumber))
       }
     case ->(EX(x, psi), phi) if isProofed(psi ->: phi) =>
-      psi.entersFree(x) match {
+      for (i <- context if i.entersFree(x))
+        return Left(InferenceRuleOnFreeVar(x, i, lineNumber))
+      phi.entersFree(x) match {
         case false => Right(new InferEX(lineInProof(expr).getOrElse(0)))
-        case true => Left(new InferenceRuleOnFreeVar(x, expr, lineNumber))
+        case true => Left(new EntersFreely(x, expr, lineNumber))
       }
     case _ => findMP(expr) match {
       case Some(pair) => Right(new MP(proof(pair._1 - 1), proof(pair._2 - 1)))
-      case None => Left(WrongProofFromLine(lineNumber, new Error().toString))
+      case None => Left(WrongProofFromLine(lineNumber, "Выражение не может быть выведено"))
     }
   }
 
+  def printLastProof(): Unit = {
+    val fileName = "proof.tmp"
+    val pw = new PrintWriter(new File(fileName))
+    proof.foreach(s => pw.write(s+"\n"))
+    pw.close()
+  }
 
-  def apply2(context: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
+
+  def apply2(ctx: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
+    context = ctx
     proofToCheck.foreach((expr: Expr) => {
       expr match {
         case a -> b => addImplication(a, b, lineNumber)
         case _ =>
       }
       Util.axiomNumber(expr, lineNumber) match {
-        case Left(reason) => return Left(reason)
+        case Left(reason) => { printLastProof(); return Left(reason)}
         case Right(num) =>
           if (num.isDefined) {
             proof += new Statement(lineNumber, expr, num.get)
@@ -71,7 +84,7 @@ class Checker {
           } else {
             getMPAnnotation(expr) match {
               case Right(annotation) => proof += new Statement(lineNumber, expr, annotation)
-              case Left(reason) => return Left(reason)
+              case Left(reason) => { printLastProof(); return Left(reason)}
             }
           }
       }
@@ -79,62 +92,6 @@ class Checker {
     })
     Right(proof)
   }
-
-  def addMP(a: Expr, b: Expr, lineNumber: Int): Unit = {
-    secondToFirst.get(b) match {
-      case Some(list) => list += (a -> lineNumber)
-      case None => secondToFirst += (b -> m.HashMap[Expr, Int](a -> lineNumber))
-    }
-  }
-
-  def findMP(expr: Expr, proof: Proof, candidates: m.HashMap[Expr, Int]): Option[(Int, Int)] = {
-    for (i <- candidates;
-         p <- proof
-         if p.expr.equals(i._1) && p.annotation.getClass != Error.getClass) {
-      return Some((p.line, i._2))
-    }
-    None
-  }
-
-  /*  def apply(context: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
-      var proof = new Proof()
-      var lineNumber = 1
-      var error = false
-      proofToCheck.foreach((expr: Expr) => {
-        expr match {
-          case a -> b =>
-            addMP(a, b, lineNumber)
-          case _ =>
-        }
-        val num = Util.axiomNumber(expr)
-        if (num.isDefined) {
-          proof += new Statement(lineNumber, expr, num.get)
-        } else if (context.contains(expr)) {
-          proof += new Statement(lineNumber, expr, new Assumption())
-        } else {
-          secondToFirst.get(expr) match {
-            case Some(list) =>
-              val res = findMP(expr, proof, list)
-              res match {
-                case Some(data) =>
-                  proof += new Statement(lineNumber, expr, new MP(proof(data._1 - 1), proof(data._2 - 1)));
-                case _ =>
-                  proof += new Statement(lineNumber, expr, new Error())
-                  return Left(WrongProofFromLine(lineNumber))
-              }
-            case None =>
-              proof += new Statement(lineNumber, expr, new Error())
-              return Left(WrongProofFromLine(lineNumber))
-          }
-        }
-        lineNumber += 1
-      })
-      beta match {
-        case Some(te) if te != proof.last.expr => return Left(WrongProofWithMsg("last statement doesn't equals to beta"))
-        case _ =>
-      }
-      Right(proof)
-    }*/
 
   def apply(proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
     apply2(List.empty, None, proofToCheck)

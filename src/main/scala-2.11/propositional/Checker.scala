@@ -75,7 +75,7 @@ class Checker {
         case _ =>
       }
       Util.axiomNumber(expr, lineNumber) match {
-        case Left(reason) => { printLastProof(); return Left(reason)}
+        case Left(reason) => return Left(reason)
         case Right(num) =>
           if (num.isDefined) {
             proof += new Statement(lineNumber, expr, num.get)
@@ -84,7 +84,7 @@ class Checker {
           } else {
             getMPAnnotation(expr) match {
               case Right(annotation) => proof += new Statement(lineNumber, expr, annotation)
-              case Left(reason) => { printLastProof(); return Left(reason)}
+              case Left(reason) => return Left(reason)
             }
           }
       }

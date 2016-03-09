@@ -6,7 +6,7 @@ import propositional.Types._
 
 object Task4 {
   def main(args: Array[String]): Unit = {
-    for (st <- Seq("correct", "incorrect"); test <- 1 to 14) {
+    for (st <- Seq("test"); test <- 1 to 1) {
       val fileName = if (args.length == 0 || args(0) == "") "data/HW4/" + st + test + ".in" else args(0)
       print(fileName + " testing... ")
       val start = System.currentTimeMillis()
@@ -24,7 +24,7 @@ object Task4 {
             println("[Failed]")
           case Right(correct) =>
             correct.foreach((line: Statement) => {
-              pw.write(line + "\n")
+              pw.write(line.expr + "\n")
             })
             println("[OK]")
         }

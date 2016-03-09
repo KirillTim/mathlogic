@@ -1,5 +1,6 @@
-import propositional.ExprTypes.{EX, ->, Term, FA}
+import propositional.ExprTypes._
 import propositional.{Deductor, Deductions, ExpressionParser, Checker}
+import propositional.Util.axiomNumber
 
 object RandomTests {
   def main(args: Array[String]) {
@@ -8,6 +9,7 @@ object RandomTests {
     test3()
     test4()
     test5()
+    test6()
   }
 
   def test1(): Unit = {
@@ -77,5 +79,14 @@ object RandomTests {
       case Left(error) => println("[Failed]")
       case Right(_) => println("[OK]")
     }
+  }
+
+  def test6() = {
+    print("brackets test: ")
+    val e = new EX(new Term("x"), new Term("P", new Term("a")) ->: new Term("Q", new Term("x")) )
+    if (e.toString.equals("?x(P(a)->Q(x))"))
+      println("[OK]")
+    else
+      println("[Failed]")
   }
 }

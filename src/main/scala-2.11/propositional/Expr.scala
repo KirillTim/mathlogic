@@ -137,18 +137,22 @@ object ExprTypes {
 
     override def getVars = expr.getVars
 
+    def needBraces = expr match {
+      case t@Term(name, _) if !t.commonPredicates.contains(name) => false
+      case _ => true;
+    }
   }
 
   case class FA(varName: Term, expr: Expr) extends Quantifier(varName, expr) {
-    override def toString: String = "@" + varName + expr
+    override def toString: String = "@" + varName + (if (needBraces) "("+expr+")" else expr)
 
-    override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90533
+    override def hashCode = (varName.hashCode * expr.hashCode()) ^ 90533
   }
 
   case class EX(varName: Term, expr: Expr) extends Quantifier(varName, expr) {
-    override def toString: String = "?" + varName + expr
+    override def toString: String = "?" + varName + (if (needBraces) "("+expr+")" else expr)
 
-    override lazy val hashCode = (varName.hashCode * expr.hashCode()) ^ 90529
+    override def hashCode = (varName.hashCode * expr.hashCode()) ^ 90529
   }
 
   case class V(a: Expr, b: Expr) extends BinaryExpr(a, b, 9, "|") {

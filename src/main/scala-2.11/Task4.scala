@@ -6,7 +6,7 @@ import propositional.Types._
 
 object Task4 {
   def main(args: Array[String]): Unit = {
-    for (st <- Seq("test"); test <- 1 to 1) {
+    for (st <- Seq("test");/*Seq("correct", "incorrect");*/ test <- 1 to 1) {
       val fileName = if (args.length == 0 || args(0) == "") "data/HW4/" + st + test + ".in" else args(0)
       print(fileName + " testing... ")
       val start = System.currentTimeMillis()
@@ -29,7 +29,7 @@ object Task4 {
             println("[OK]")
         }
       } catch {
-        case _: Throwable =>
+        case e: Throwable => println(e.getMessage)
       }
       val total = System.currentTimeMillis() - start
       println("time: " + (total / 1000.0) + "s")

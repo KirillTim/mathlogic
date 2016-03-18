@@ -15,16 +15,26 @@ object Util {
     case (a -> b) -> ((c -> d) -> ((e V f) -> g)) if a == e && b == d && b == g && c == f => Right(Some(Axiom(8)))
     case (a -> b) -> ((c -> !!(d)) -> !!(e)) if a == c && a == e && b == d => Right(Some(Axiom(9)))
     case !!(!!(a)) -> b if a == b => Right(Some(Axiom(10)))
-    case ->(FA(x, e), phi) if e.isSubstituted(phi) => Right(Some(Axiom(11)))
-    case ->(FA(x, e), phi) if (substitution(e, phi) match {
+    case ->(FA(x, e), phi) if e.findChanges(x, phi).getOrElse(Set()).size == 1 =>
+      if (e.isSubstituted(x, phi))
+        Right(Some(Axiom(11)))
+      else
+        Left(NotFreeForSubstitution(e.findChanges(x,phi).get.head, x, e, line))
+    case ->(phi, EX(x, e)) if e.findChanges(x, phi).getOrElse(Set()).size == 1 =>
+      if (e.isSubstituted(x, phi))
+        Right(Some(Axiom(12)))
+      else
+        Left(NotFreeForSubstitution(e.findChanges(x,phi).get.head, x, e, line))
+    /*case ->(FA(x, e), phi) if (substitution(e, phi) match {
       case Some(y) => !e.isFreeForSubstitution(y, x)
       case None => false
     }) => Left(NotFreeForSubstitution(substitution(e, phi).get, x, e, line))
-    case ->(phi, EX(x, e)) if phi.isSubstituted(e) => Right(Some(Axiom(12)))
-    case ->(phi, EX(x, e)) if (substitution(e, phi) match {
+    case ->(FA(x, e), phi) if e.isSubstituted(phi) => Right(Some(Axiom(11)))*/
+    /*case ->(phi, EX(x, e)) if (substitution(e, phi) match {
       case Some(y) => !e.isFreeForSubstitution(y, x)
       case None => false
     }) => Left(NotFreeForSubstitution(substitution(e, phi).get, x, e, line))
+    case ->(phi, EX(x, e)) if phi.isSubstituted(e) => Right(Some(Axiom(12)))*/
     case ->(Predicate("=", a, b), Predicate("=", Term("'", c), Term("'", d))) if (a, b) == (c, d) => Right(Some(Axiom(13)))
     case ->(Predicate("=", a, b), ->(Predicate("=", c, d), Predicate("=", e, f)))
       if (a, b) == (c, e) && d == f => Right(Some(Axiom(14)))
@@ -42,10 +52,10 @@ object Util {
     case _ => Right(None)
   }
 
-  def substitution(e: Expr, d: Expr): Option[Expr] = e.getChanges(d) match {
+  /*def substitution(e: Expr, d: Expr): Option[Expr] = e.getChanges(d) match {
     case Some(set) if set.size == 1 =>
       set.find(_ => true).filter({ case (ex, t) => e.substitute(Map(t.name -> ex)) == d }).map(_._1)
     case None => None
     case _ => None
-  }
+  }*/
 }

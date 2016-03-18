@@ -52,7 +52,7 @@ object Types {
   }
 
   case class NotFreeForSubstitution(t: Expr, x: Term, e: Expr, line: Int) extends WrongProof {
-    override def toString = "В строке " + line + " терм " + t + " не свободен для подстановки вместо терма " + x + " формулу " + e
+    override def toString = "В строке " + line + " терм " + t + " не свободен для подстановки вместо терма " + x + " в формулу " + e
   }
 
   case class EntersFreely(x: Term, e: Expr, line: Int) extends WrongProof {

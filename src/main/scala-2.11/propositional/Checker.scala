@@ -8,6 +8,7 @@ import propositional.ExprTypes._
 import scala.collection.{mutable => m}
 
 class Checker {
+
   var lineNumber = 1
   val proof = new Proof()
   var context: Seq[Expr] = null

@@ -45,7 +45,7 @@ object Util {
     case Predicate("=", Term("*", a, Term("0"), Term("0"))) => Right(Some(Axiom(18)))
     case Predicate("=", Term("*", a, Term("'", b)), Term("+", Term("*", c, d), e)) if (a, b) == (c, d) && a == e => Right(Some(Axiom(19)))
     case ->(&(phi, FA(x, ->(psi, xi))), theta) if {
-      psi == theta && psi.entersFree(x) &&
+      psi == theta && psi.varEntersFree(x) &&
         psi.substitute(Map(x.toString -> Term("0"))) == phi &&
         psi.substitute(Map(x.toString -> Term("'", x))) == xi
     } => Right(Some(Axiom(20)))

@@ -12,6 +12,7 @@ class Deductor {
     val alpha = context.last
 
     var tmp = List[Expr]()
+    println("proof.size = "+proof.size)
     proof.foreach((st: Statement) => {
       //println("len= "+tmp.length)
       val q = st match {
@@ -27,6 +28,9 @@ class Deductor {
         //case _ =>
       }
       tmp = tmp ++ q
+      if (tmp.size % 3000 == 0) {
+        println("add "+tmp.size+" lines")
+      }
     })
 
     new Checker().apply2(context.init, Some(context.last ->: beta), tmp)/*proof.map((st: Statement) => {

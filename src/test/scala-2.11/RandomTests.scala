@@ -126,7 +126,7 @@ object RandomTests {
       "P(a,b,c,d)->Q(x,x)",
       "?xP(x)->x",
       "@a(P(a)->x)").map(new ExpressionParser(_).inputLine.run().get)
-    if (yes.forall(p => p.entersFree(x)))
+    if (yes.forall(p => p.varEntersFree(x)))
       print("[OK] ")
     else
       print("[Failed] ")
@@ -134,7 +134,7 @@ object RandomTests {
       "?dP(a,b,c,d)->?xQ(x,x)",
       "?x(P(x)->x)",
       "@a@x(P(a)->x)").map(new ExpressionParser(_).inputLine.run().get)
-    if (no.forall(p => !p.entersFree(x)))
+    if (no.forall(p => !p.varEntersFree(x)))
       println("[OK] ")
     else
       println("[Failed] ")
@@ -144,20 +144,22 @@ object RandomTests {
     print("is substituted test: ")
     val a = new Term("a")
     val x = new Term("x")
-    val yes = List("x" -> "q",
+    val yes = List("x" -> "t+0",
+      "x" -> "q",
+      "(x=t->x=t->t=t)" -> "(t+0=t->t+0=t->t=t)",
       "(x=x)" -> "(z=z)",
       "P(x)" -> "P(a)",
       "Q(x,y,z)" -> "Q(a,y,z)",
       "P(x,x)->?xQ(x)" -> "P(a,a)->?xQ(x)",
       "P(x,a)" -> "P(a,a)",
-      "x&x"->"x&x"
+      "x&x"->"x&x",
+      "x" -> "q->q"
       ).map(p => (new ExpressionParser(p._1).inputLine.run().get, new ExpressionParser(p._2).inputLine.run().get))
     if (yes.forall(p => p._1.isSubstituted(x, p._2)))
       print("[OK] ")
     else
       print("[Failed] ")
-    val no = List("x" -> "q->q",
-      "(x=x)" -> "(z=a)",
+    val no = List("(x=x)" -> "(z=a)",
       "@z(P(x,y)->P(z))" -> "@z(P(x,z)->P(z))",
       "Q(x,y,z)" -> "Q(y,x,z)",
       "P(x,x)->?xQ(x)" -> "P(a,a)->?yQ(y)",

@@ -50,7 +50,7 @@ abstract class Expr(val opPriority: Int) {
     case Term(name, b@_*) => Term(name, b.map(_.substitute(variables)).map({ case t: Term => t }): _*)
   }
 
-  def findChanges(x:Term, other: Expr): Option[Set[Expr]] = (this, other) match {
+  /*def findChanges(x:Term, other: Expr): Option[Set[Expr]] = (this, other) match {
     case (FA(v1, e1), FA(v2, e2)) =>
       if (v1 == x) Some(Set()) else e1.findChanges(x, e2)
     case (EX(v1, e1), EX(v2, e2)) =>
@@ -66,6 +66,38 @@ abstract class Expr(val opPriority: Int) {
     case (V(a1, b1), V(a2, b2)) => Some(a1.findChanges(x, a2).getOrElse(Set()) ++ b1.findChanges(x, b2).getOrElse(Set()))
     case (!!(a1), !!(a2)) => Some(a1.findChanges(x, a2).getOrElse(Set()))
     case _ => None
+  }*/
+
+  def concat(a: Option[Set[Expr]], b: Option[Set[Expr]]) : Option[Set[Expr]] = (a,b) match {
+    case (None, Some(_)) => None
+    case (Some(_), None) => None
+    case (None, None) => None
+    case (Some(l1), Some(l2)) => Some(l1 ++ l2)
+  }
+
+  def findChanges(x: Term, other: Expr) :Option[Set[Expr]] = (this, other) match {
+    case (FA(v1, e1), FA(v2, e2)) =>
+      if (v1 != v2) None else e1.findChanges(x, e2)
+    case (EX(v1, e1), EX(v2, e2)) =>
+      if (v1 != v2) None else e1.findChanges(x, e2)
+    case (t1@Term(n1), expr) if t1 == x =>
+      Some(Set(expr))  //TODO: confirm
+    case (Term(n1), Term(n2)) =>
+      Some(Set())
+    case (Term(n1, args1@_*), Term(n2, args2@_*)) if n1 == n2 =>
+      args1.zip(args2).map((p) => p._1.findChanges(x, p._2)).reduce[Option[Set[Expr]]]((a1,a2) => concat(a1,a2))
+    case (Predicate(n1, args1@_*), Predicate(n2, args2@_*)) if n1 == n2 =>
+      args1.zip(args2).map((p) => p._1.findChanges(x, p._2)).reduce[Option[Set[Expr]]]((a1,a2) => concat(a1,a2))
+    case (->(a1, b1), ->(a2, b2)) =>
+      concat(a1.findChanges(x, a2), b1.findChanges(x, b2))
+    case (&(a1, b1), &(a2, b2)) =>
+      concat(a1.findChanges(x, a2), b1.findChanges(x, b2))
+    case (V(a1, b1), V(a2, b2)) =>
+      concat(a1.findChanges(x, a2), b1.findChanges(x, b2))
+    case (!!(a1), !!(a2)) =>
+      a1.findChanges(x, a2)
+    case _ => None
+
   }
 
   def isSubstituted(x: Term, other: Expr): Boolean = {

@@ -97,11 +97,11 @@ class ProofMaker {
     var newProof = List[Expr]()
     val deduced0 = new Deductor().apply(firstDeduceContext, Some(firstProof.last), firstProof) match {
       case Left(error) => throw new Error("wrong proof in deduce0 : " + error);
-      case Right(proof) => proof.map((a: Statement) => a.expr)
+      case Right(proof) => proof._3
     }
     val deduced1 = new Deductor().apply(secondDeduceContext, Some(secondProof.last), secondProof) match {
       case Left(error) => throw new Error("wrong proof in deduce1 : " + error);
-      case Right(proof) => proof.map((a: Statement) => a.expr)
+      case Right(proof) => proof._3
     }
     newProof ++= (deduced0 ++ deduced1 ++ Proofs.tertiumNonDatur(varToRemove))
     newProof ++= List[Expr](

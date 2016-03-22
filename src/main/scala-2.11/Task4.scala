@@ -1,12 +1,12 @@
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
-import propositional.{Checker, Deductor, ExpressionParser}
+import propositional.{Checker, Deductor, Expr, ExpressionParser}
 import propositional.Types._
 
 
 object Task4 {
   def main(args: Array[String]): Unit = {
-    for (st <- Seq("correct"/*, "incorrect"*/);test <- 11 to 11) {
+    for (st <- Seq("correct", "incorrect");test <- (1 to 10).toList ++ (12 to 15).toList) {
       val fileName = if (args.length == 0 || args(0) == "") "data/HW4/" + st + test + ".in" else args(0)
       print(fileName + " testing... ")
       val start = System.currentTimeMillis()
@@ -23,9 +23,10 @@ object Task4 {
               }).toString)
             println("[Failed]")
           case Right(correct) =>
-            correct.foreach((line: Statement) => {
+            pw.write(correct._1.mkString(",")+"|-"+correct._2+"\n")
+            correct._3.foreach((line:Expr) => pw.write(line+"\n"))/*(line: Statement) => {
               pw.write(line.expr + "\n")
-            })
+            })*/
             println("[OK]")
         }
       } catch {

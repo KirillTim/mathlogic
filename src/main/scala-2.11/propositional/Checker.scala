@@ -41,15 +41,15 @@ class Checker {
 
   def getMPAnnotation(expr: Expr): Either[WrongProof, Annotation] = expr match {
     case ->(phi, FA(x, psi)) if isProofed(phi ->: psi) =>
-      for (i <- context if i.varEntersFree(x))
-        return Left(InferenceRuleOnFreeVar(x, i, lineNumber))
+      if (context.last.varEntersFree(x))
+        return Left(InferenceRuleOnFreeVar(x, context.last, lineNumber))
       phi.varEntersFree(x) match {
         case false => Right(new InferFA(lineInProof(expr).getOrElse(0))) //0 == expr was in assumption
         case true => Left(new EntersFreely(x, expr, lineNumber))
       }
     case ->(EX(x, psi), phi) if isProofed(psi ->: phi) =>
-      for (i <- context if i.varEntersFree(x))
-        return Left(InferenceRuleOnFreeVar(x, i, lineNumber))
+      if (context.last.varEntersFree(x))
+        return Left(InferenceRuleOnFreeVar(x, context.last, lineNumber))
       phi.varEntersFree(x) match {
         case false => Right(new InferEX(lineInProof(expr).getOrElse(0)))
         case true => Left(new EntersFreely(x, expr, lineNumber))

@@ -1,6 +1,6 @@
 import java.io.{File, PrintWriter}
 
-import propositional.{Deductor, Checker}
+import propositional.{Checker, Deductor, Expr}
 import propositional.Types.Statement
 
 object Task2 {
@@ -13,8 +13,9 @@ object Task2 {
       case Left(error) =>
         pw.write(error.toString)
       case Right(correct) =>
-        correct.foreach((line: Statement) => {
-          pw.write(line.expr + "\n")
+        pw.write(correct._1.mkString(",")+"|-"+correct._2+"\n")
+        correct._3.foreach((line: Expr) => {
+          pw.write(line+ "\n")
         })
     }
     val total = System.currentTimeMillis() - start

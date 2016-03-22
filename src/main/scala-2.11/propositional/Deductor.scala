@@ -1,6 +1,8 @@
 package propositional
 
-import propositional.ExprTypes.{Term, FA, ->, EX}
+import java.io.PrintWriter
+
+import propositional.ExprTypes.{->, EX, FA, Term}
 import propositional.Types._
 
 import scala.util.Try
@@ -8,13 +10,20 @@ import scala.collection.{mutable => m}
 
 class Deductor {
 
-  def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Either[WrongProof, Proof] = {
+  def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Seq[Expr] = {
     val alpha = context.last
 
+    val pw = new PrintWriter("log.log")
+
     var tmp = List[Expr]()
-    println("proof.size = "+proof.size)
+    //println("proof.size = "+proof.size)
+    var prev = 0
+    var FAcount = 0
+    var i = 0
     proof.foreach((st: Statement) => {
       //println("len= "+tmp.length)
+      i += 1
+      pw.write(i+"\n")
       val q = st match {
         case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
         case Statement(_, e: Expr, a: Annotation) if e != alpha =>
@@ -22,18 +31,27 @@ class Deductor {
             case Axiom(_) => case1(st, alpha)
             case Assumption() => case1(st, alpha)
             case MP(j: Statement, k: Statement) => case3(st, j, alpha)
-            case InferFA(_) => caseFA(st, alpha)
+            case InferFA(_) =>
+              /*FAcount += 1
+              if (FAcount % 50 == 0) {
+                println("fa count= "+FAcount)
+              }*/
+              caseFA(st, alpha)
             case InferEX(_) => caseEX(st, alpha)
           }
         //case _ =>
       }
       tmp = tmp ++ q
-      if (tmp.size % 3000 == 0) {
+      /*if (prev*10000 < tmp.size) {
+        prev += 1
         println("add "+tmp.size+" lines")
-      }
+      }*/
     })
 
-    new Checker().apply2(context.init, Some(context.last ->: beta), tmp)/*proof.map((st: Statement) => {
+    pw.close()
+    //println("deduction finished")
+    tmp
+    /*new Checker().apply2(context.init, Some(context.last ->: beta), tmp)*//*proof.map((st: Statement) => {
       //println("now at: "+st)
       st match {
         case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
@@ -107,7 +125,7 @@ class Deductor {
     deduceEX(st.expr, alpha)
   }
 
-  def apply(fileName: String): Either[WrongProof, Proof] = {
+  def apply(fileName: String): Either[WrongProof, (Seq[Expr], Expr, Seq[Expr])] = {
     var proof = new m.MutableList[Expr]
     val lines = io.Source.fromFile(fileName).getLines().toList
     val firstLine = new ExpressionParser(lines.head.replaceAll(" ", "")).derivationInputLine.run()
@@ -121,14 +139,15 @@ class Deductor {
     apply(firstLine.get._1, Some(firstLine.get._2), proof)
   }
 
-  def apply(context: Seq[Expr], beta: Option[Expr], proof: Seq[Expr]): Either[WrongProof, Proof] = {
+  //return (new context, beta, proof)
+  def apply(context: Seq[Expr], beta: Option[Expr], proof: Seq[Expr]): Either[WrongProof, (Seq[Expr], Expr, Seq[Expr])] = {
     if (beta.isEmpty) {
       println("Нужна бета!")
       return null
     }
     new Checker().apply2(context, beta, proof) match {
       case Left(error) => Left(error)
-      case Right(correct) => deduce(correct, context, beta.get)
+      case Right(correct) => Right(context.init, context.last ->: beta.get, deduce(correct, context, beta.get))
     }
   }
 }

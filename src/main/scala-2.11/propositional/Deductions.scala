@@ -13,10 +13,10 @@ object Deductions {
   private def lemma1InferFA(a: Expr, b: Expr, c: Expr): List[Expr] = { //(A&B->FA(x,C)) -> (A->B->FA(x,C))
     new Deductor().apply(List((a&b) ->: c, a, b), Some(c), List(a, b, a ->: (b->:(a&b)), b ->: (a&b), a & b, (a&b) ->: c, c)) match {
       case Right(proof1) =>
-        new Deductor().apply(List((a&b) ->: c, a), Some(b ->: c), proof1.map(st => st.expr)) match {
+        new Deductor().apply(List((a&b) ->: c, a), Some(b ->: c), proof1._3) match {
           case Right(proof2) =>
-            new Deductor().apply(List((a&b) ->: c), Some(a ->: (b ->: c)), proof2.map(st => st.expr)) match {
-              case Right(finalProof) => finalProof.map(st => st.expr).toList
+            new Deductor().apply(List((a&b) ->: c), Some(a ->: (b ->: c)), proof2._3) match {
+              case Right(finalProof) => finalProof._3.toList
               case Left(error) => throw new IllegalArgumentException("cant deduce third stage in lemma1 FA(" + a + "," + b + "," + c + ")  : " + error)
             }
           case Left(error) => throw new IllegalArgumentException("cant deduce second stage in lemma1 FA(" + a + "," + b + "," + c + ")  : " + error)
@@ -33,8 +33,8 @@ object Deductions {
   private def lemma2InferFA(a: Expr, b: Expr, c: Expr): List[Expr] = { //(A->B->C) -> (A&B->C)
     new Deductor().apply(List(a ->: b ->: c, a&b), Some(c), List((a&b) ->: a, a&b, a, (a&b) ->: b, b, a ->: (b ->: c), b ->: c, c)) match {
         case Right(proof1) =>
-          new Deductor().apply(List(a ->: b ->: c), Some(a&b ->: c), proof1.map(st => st.expr)) match {
-            case Right(finalProof) => finalProof.map(st => st.expr).toList
+          new Deductor().apply(List(a ->: b ->: c), Some(a&b ->: c), proof1._3) match {
+            case Right(finalProof) => finalProof._3.toList
             case Left(error) => throw new IllegalArgumentException("cant deduce second stage in lemma2 FA(" + a + "," + b + "," + c + ")  : " + error)
           }
         case Left(error) => throw new IllegalArgumentException("cant deduce in lemma2 FA(" + a + "," + b + "," + c + ")  : " + error)
@@ -48,10 +48,10 @@ object Deductions {
   def lemmaEX(a: Expr, b: Expr, c: Expr): List[Expr] = { //(A->B->C) -> (B->A->C)
     new Deductor().apply(List(a ->: (b ->: c), b, a), Some(c), List(a ->: (b ->: c), a, b ->: c, b, c)) match {
       case Right(proof1) =>
-        new Deductor().apply(List(a ->: (b ->: c), b), Some(a ->: c), proof1.map(st => st.expr)) match {
+        new Deductor().apply(List(a ->: (b ->: c), b), Some(a ->: c), proof1._3) match {
           case Right(proof2) =>
-            new Deductor().apply(List(a ->: (b ->: c)), Some(b ->: (a ->: c)), proof2.map(st => st.expr)) match {
-              case Right(finalProof) => finalProof.map(st => st.expr).toList
+            new Deductor().apply(List(a ->: (b ->: c)), Some(b ->: (a ->: c)), proof2._3) match {
+              case Right(finalProof) => finalProof._3.toList
               case Left(error) => throw new IllegalArgumentException("cant deduce third stage in lemmaInferEX(" + a + "," + b + "," + c + ")  : " + error)
             }
           case Left(error) => throw new IllegalArgumentException("cant deduce second stage in lemmaInferEX(" + a + "," + b + "," + c + ")  : " + error)

@@ -74,7 +74,7 @@ abstract class Expr(val opPriority: Int) {
       case None => false //not the same trees
       case Some(set) =>
         set.size match {
-          case 0 => false
+          case 0 => true
           case 1 =>
             isFreeForSubstitution(x, set.head) && other == substituteFree(x, set.head)
           case _ => false
@@ -97,97 +97,6 @@ abstract class Expr(val opPriority: Int) {
     case V(a, b) => new ExprTypes.V(a.substituteFree(what, to), b.substituteFree(what, to))
     case !!(a) => new !!(a.substituteFree(what, to))
   }
-
-  /*def isFreeForSubstitution(e: Expr, x: Term, affectedVars: Set[Term] = Set()): Boolean = this match {
-    case FA(y, phi) => phi.isFreeForSubstitution(e, x, affectedVars + y)
-    case EX(y, phi) => phi.isFreeForSubstitution(e, x, affectedVars + y)
-    case ->(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
-    case V(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
-    case &(a, b) => a.isFreeForSubstitution(e, x, affectedVars) && b.isFreeForSubstitution(e, x, affectedVars)
-    case t@Term(name) if affectedVars.contains(t) && name == x.toString => false
-    case Term(name) if name == x.toString => e.getVars.forall(!affectedVars.contains(_))
-    case Term(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
-    case Predicate(name, b@_*) => b.forall(_.isFreeForSubstitution(e, x, affectedVars))
-    case _ => true
-  }
-
-  def entersFree(e: Term, affectedVars: Set[Term] = Set()): Boolean = {
-    this match {
-      case FA(x, b) => b.entersFree(e, affectedVars + x)
-      case EX(x, b) => b.entersFree(e, affectedVars + x)
-      case ->(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
-      case V(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
-      case &(a, b) => a.entersFree(e, affectedVars) || b.entersFree(e, affectedVars)
-      case !!(a) => a.entersFree(e, affectedVars)
-      case t@Term(_) if t == e => !affectedVars.contains(t)
-      case Term(name, b@_*) => b.exists(_.entersFree(e, affectedVars))
-      case Predicate(name, b@_*) => b.exists(_.entersFree(e, affectedVars))
-      case _ => false
-    }
-  }
-
-  def substitute(variables: Map[String, Expr]): Expr = this match {
-    case FA(x, b) => FA(x, b.substitute(variables))
-    case EX(x, b) => EX(x, b.substitute(variables))
-    case Term(name) if variables.get(name).isDefined => variables.get(name).get
-    case v@Term(name) => v
-    case &(a, b) => ExprTypes.&(a.substitute(variables), b.substitute(variables))
-    case ->(a, b) => ->(a.substitute(variables), b.substitute(variables))
-    case V(a, b) => ExprTypes.V(a.substitute(variables), b.substitute(variables))
-    case !!(a) => !!(a.substitute(variables))
-    case Predicate(name, b@_*) => Predicate(name, b.map(_.substitute(variables)).map({ case t: Term => t }): _*)
-    case Term(name, b@_*) => Term(name, b.map(_.substitute(variables)).map({ case t: Term => t }): _*)
-  }
-
-  def mergeChanges(mapA: Option[Set[(Expr, Term)]],
-                   mapB: Option[Set[(Expr, Term)]]): Option[Set[(Expr, Term)]] = Some(mapA.getOrElse(Set()) ++ mapB.getOrElse(Set()))
-
-  def isSubstituted(e: Expr): Boolean = getChanges(e) match {
-    case Some(set) if set.size <= 1 =>
-      set.forall(p => isFreeForSubstitution(p._1, p._2) && substitute(Map(p._2.name -> p._1)) == e)
-    case _ => false
-  }
-
-  def getChanges(e: Expr): Option[Set[(Expr, Term)]] = this match {
-    case ->(a, b) => e match {
-      case ->(c, d) => mergeChanges(a.getChanges(c), b.getChanges(d))
-      case _ => None
-    }
-    case V(a, b) => e match {
-      case V(c, d) => mergeChanges(a.getChanges(c), b.getChanges(d))
-      case _ => None
-    }
-    case &(a, b) => e match {
-      case &(c, d) => mergeChanges(a.getChanges(c), b.getChanges(d))
-      case _ => None
-    }
-    case !!(a) => e match {
-      case !!(b) => a.getChanges(b)
-      case _ => None
-    }
-    case FA(t, ex) => e match {
-      case FA(g, dx) => ex.getChanges(dx)
-      case _ => None
-    }
-    case EX(t, ex) => e match {
-      case EX(g, dx) => ex.getChanges(dx)
-      case _ => None
-    }
-    case Predicate(name, b@_*) => e match {
-      case Predicate(name2, b2@_*) if name == name2 && b.length == b2.length =>
-        if (b.isEmpty) Some(Set())
-        else b.zip(b2).map(p => p._1.getChanges(p._2)).foldRight(Option.empty[Set[(Expr, Term)]])(mergeChanges)
-      case _ => None
-    }
-    case t@Term(name) if t != e => Some(Set(e -> t))
-    case Term(name, b@_*) => e match {
-      case Term(name2, b2@_*) if name == name2 && b.length == b2.length =>
-        if (b.isEmpty) Some(Set())
-        else b.zip(b2).map(p => p._1.getChanges(p._2)).foldRight(Option.empty[Set[(Expr, Term)]])(mergeChanges)
-      case _ => None
-    }
-    case _ => None
-  }*/
 
   def evaluate(m: Map[String, Boolean]): Boolean //= false
 

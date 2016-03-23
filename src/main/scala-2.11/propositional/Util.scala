@@ -25,16 +25,6 @@ object Util {
         Right(Some(Axiom(12)))
       else
         Left(NotFreeForSubstitution(e.findChanges(x,phi).get.headOption.getOrElse(x), x, e, line))
-    /*case ->(FA(x, e), phi) if (substitution(e, phi) match {
-      case Some(y) => !e.isFreeForSubstitution(y, x)
-      case None => false
-    }) => Left(NotFreeForSubstitution(substitution(e, phi).get, x, e, line))
-    case ->(FA(x, e), phi) if e.isSubstituted(phi) => Right(Some(Axiom(11)))*/
-    /*case ->(phi, EX(x, e)) if (substitution(e, phi) match {
-      case Some(y) => !e.isFreeForSubstitution(y, x)
-      case None => false
-    }) => Left(NotFreeForSubstitution(substitution(e, phi).get, x, e, line))
-    case ->(phi, EX(x, e)) if phi.isSubstituted(e) => Right(Some(Axiom(12)))*/
     case ->(Predicate("=", a, b), Predicate("=", Term("'", c), Term("'", d))) if (a, b) == (c, d) => Right(Some(Axiom(13)))
     case ->(Predicate("=", a, b), ->(Predicate("=", c, d), Predicate("=", e, f)))
       if (a, b) == (c, e) && d == f => Right(Some(Axiom(14)))
@@ -51,11 +41,4 @@ object Util {
     } => Right(Some(Axiom(20)))
     case _ => Right(None)
   }
-
-  /*def substitution(e: Expr, d: Expr): Option[Expr] = e.getChanges(d) match {
-    case Some(set) if set.size == 1 =>
-      set.find(_ => true).filter({ case (ex, t) => e.substitute(Map(t.name -> ex)) == d }).map(_._1)
-    case None => None
-    case _ => None
-  }*/
 }

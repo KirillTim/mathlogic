@@ -13,47 +13,9 @@ class Deductor {
   def deduce(proof: Proof, context: Seq[Expr], beta: Expr): Seq[Expr] = {
     val alpha = context.last
 
-    val pw = new PrintWriter("log.log")
-
     var tmp = List[Expr]()
-    //println("proof.size = "+proof.size)
-    var prev = 0
-    var FAcount = 0
-    var i = 0
     proof.foreach((st: Statement) => {
-      //println("len= "+tmp.length)
-      i += 1
-      pw.write(i+"\n")
       val q = st match {
-        case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
-        case Statement(_, e: Expr, a: Annotation) if e != alpha =>
-          a match {
-            case Axiom(_) => case1(st, alpha)
-            case Assumption() => case1(st, alpha)
-            case MP(j: Statement, k: Statement) => case3(st, j, alpha)
-            case InferFA(_) =>
-              /*FAcount += 1
-              if (FAcount % 50 == 0) {
-                println("fa count= "+FAcount)
-              }*/
-              caseFA(st, alpha)
-            case InferEX(_) => caseEX(st, alpha)
-          }
-        //case _ =>
-      }
-      tmp = tmp ++ q
-      /*if (prev*10000 < tmp.size) {
-        prev += 1
-        println("add "+tmp.size+" lines")
-      }*/
-    })
-
-    pw.close()
-    //println("deduction finished")
-    tmp
-    /*new Checker().apply2(context.init, Some(context.last ->: beta), tmp)*//*proof.map((st: Statement) => {
-      //println("now at: "+st)
-      st match {
         case Statement(_, e: Expr, a: Annotation) if e == alpha => case2(st, alpha)
         case Statement(_, e: Expr, a: Annotation) if e != alpha =>
           a match {
@@ -63,9 +25,10 @@ class Deductor {
             case InferFA(_) => caseFA(st, alpha)
             case InferEX(_) => caseEX(st, alpha)
           }
-        //case _ =>
       }
-    }).flatMap((a: List[Expr]) => a))*/
+      tmp = tmp ++ q
+    })
+    tmp
   }
 
   private def case1(di: Statement, alpha: Expr): List[Expr] = {

@@ -60,14 +60,6 @@ class Checker {
     }
   }
 
-  def printLastProof(): Unit = {
-    val fileName = "proof.tmp"
-    val pw = new PrintWriter(new File(fileName))
-    proof.foreach(s => pw.write(s+"\n"))
-    pw.close()
-  }
-
-
   def apply2(ctx: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {
     context = ctx
     proofToCheck.foreach((expr: Expr) => {

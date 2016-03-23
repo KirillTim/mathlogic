@@ -39,7 +39,7 @@ class Checker {
   def isProofed(expr: Expr) =
     lineInProof(expr).isDefined || context.contains(expr)
 
-  def getMPAnnotation(expr: Expr): Either[WrongProof, Annotation] = expr match {
+  /*def getMPAnnotation(expr: Expr): Either[WrongProof, Annotation] = expr match {
     case ->(phi, FA(x, psi)) if isProofed(phi ->: psi) =>
       if (context.last.varEntersFree(x))
         return Left(InferenceRuleOnFreeVar(x, context.last, lineNumber))
@@ -58,6 +58,30 @@ class Checker {
       case Some(pair) => Right(new MP(proof(pair._1 - 1), proof(pair._2 - 1)))
       case None => Left(WrongProofFromLine(lineNumber, "Выражение не может быть выведено"))
     }
+  }*/
+
+  def getMPAnnotation(expr: Expr): Either[WrongProof, Annotation] = findMP(expr) match {
+    case Some(pair) =>
+      Right(new MP(proof(pair._1 - 1), proof(pair._2 - 1)))
+    case None =>
+      expr match {
+        case ->(phi, FA(x, psi)) if isProofed(phi ->: psi) =>
+          if (context.last.varEntersFree(x))
+            return Left(InferenceRuleOnFreeVar(x, context.last, lineNumber))
+          phi.varEntersFree(x) match {
+            case false => Right(new InferFA(lineInProof(expr).getOrElse(0))) //0 == expr was in assumption
+            case true => Left(new EntersFreely(x, expr, lineNumber))
+          }
+        case ->(EX(x, psi), phi) if isProofed(psi ->: phi) =>
+          if (context.last.varEntersFree(x))
+            return Left(InferenceRuleOnFreeVar(x, context.last, lineNumber))
+          phi.varEntersFree(x) match {
+            case false => Right(new InferEX(lineInProof(expr).getOrElse(0)))
+            case true => Left(new EntersFreely(x, expr, lineNumber))
+          }
+        case _ =>
+          Left(WrongProofFromLine(lineNumber, "Выражение не может быть выведено"))
+      }
   }
 
   def apply2(ctx: Seq[Expr], beta: Option[Expr], proofToCheck: Seq[Expr]): Either[WrongProof, Proof] = {

@@ -1,17 +1,19 @@
 import java.io.{File, PrintWriter}
 
-import propositional.{Checker, Deductor, Expr, ExpressionParser}
+import propositional.{Deductor, Expr}
 import propositional.Types._
 
 
 object Task4 {
+  val TEST_FOLDER = System.getProperty("user.dir") + "/data/hw4tests"
+
   def main(args: Array[String]): Unit = {
-    //for (st <- Seq(/*"correct",*/ "incorrect");test <- (1 to 10).toList ++ (11 to 15).toList) {
-    for (st <- Seq("test"); test <- 1 to 19) {
-      val fileName = if (args.length == 0 || args(0) == "") "data/HW4/tests6/" + st + "."+test else args(0)
+    val testFiles = getListOfFiles(TEST_FOLDER)
+    for (name <- testFiles) {
+      val fileName = if (args.length == 0 || args(0) == "") name else args(0)
       print(fileName + " testing... ")
       val start = System.currentTimeMillis()
-      val pw = new PrintWriter(new File(fileName + ".hw4.out"))
+      val pw = new PrintWriter(new File(name + "hw4.out"))
       try {
         new Deductor().apply(fileName) match {
           case Left(error) =>
@@ -35,6 +37,15 @@ object Task4 {
       println("time: " + (total / 1000.0) + "s")
       pw.close()
 
+    }
+  }
+
+  def getListOfFiles(dir: String): List[String] = {
+    val d = new File(dir)
+    if (d.exists && d.isDirectory) {
+      d.listFiles.filter(_.isFile).toList.map(_.toString)
+    } else {
+      List[String]()
     }
   }
 }

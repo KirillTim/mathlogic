@@ -7,7 +7,7 @@ stringToInt str = fst (head (reads str :: [(Integer, String)]))
 
 lim :: Parser Expr
 lim = do
-  _ <- spaces *> char 'W' <* spaces
+  _ <- spaces *> char 'w' <* spaces
   return Limit
 
 ord :: Parser Expr

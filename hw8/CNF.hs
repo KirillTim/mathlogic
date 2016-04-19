@@ -41,7 +41,7 @@ atom :: CNF -> Bool
 atom (Atom _) = True
 atom _ = False
 
-len :: CNF -> Int
+len :: CNF -> Integer
 len Nil = 0
 len (Atom _) = 0
 len a = 1 + len (rest a)
@@ -57,7 +57,98 @@ append a Nil = a
 append (Atom _) b = b
 append a b = List (first a) (append (rest a) b)
 
+cmp Nil Nil            = EQ
+cmp Nil b              = LT
+cmp a Nil              = GT
+cmp (Atom a) _         = LT
+cmp _ (Atom b)         = GT
+cmp a (List (_, 0) bs) = a `cmp` bs
+cmp (List (_, 0) as) b = as `cmp` b
+cmp (Atom a) (Atom b)  = a `compare` b
+cmp l1@(List (a1, a2) as) l2@(List (b1, b2) bs)
+    | cmp a1 b1 /= EQ  = a1 `cmp` b1
+    | a2 /= b2         = a2 `compare` b2
+    | otherwise        = as `cmp` bs
 
+add Nil b                   = b
+add a Nil                   = a
+add (Atom a) (Atom b)       = Atom (a + b)
+add a b
+    | fe a `cmp` fe b == LT = b
+    | fe a `cmp` fe b == EQ = List (fe a, fc a + fc b) (rest b)
+    | otherwise             = List (fe a, fc a) (rest a `add` b)
+
+sub (Atom a) (Atom b)
+    | a < b                 = Atom 0
+    | otherwise             = Atom $ a - b
+sub a b
+    | fe a `cmp` fe b == LT = Atom 0
+    | fe a `cmp` fe b == GT = a
+    | fc a < fc b           = Atom 0
+    | fc a > fc b           = List (fe a, fc a - fc b) (rest a)
+    | otherwise             = rest a `sub` rest b
+
+c a b
+  | fe b `cmp` fe a == LT = 1 + c (rest a) b
+  | otherwise             = 0
+
+count a b n = n + c (restn a n) b
+
+padd a b n = append (firstn a n) (restn a n `add` b)
+
+pmult Nil Nil n           = Atom 0
+pmult (Atom a) (Atom b) n = Atom (a * b)
+pmult a (Atom b) n        = List (fe a, fc a * b) (rest a)
+pmult a b n
+    = List (padd (fe a) (fe b) m, fc b) (pmult a (rest b) m)
+                        where m = count (fe a) (fe b) n
+
+mul a b = pmult a b 0
+
+rest' (List _ (Atom n)) = n
+
+exp1 p b
+     | cmp (fe b) (Atom 1) == EQ
+         = List (Atom $ fc b, p ^ rest' b) (Atom 0)
+     | atom (rest b)
+         = let e = List (sub (fe b) (Atom 1), fc b) (Atom 0) in
+               List (e, p ^ rest' b) (Atom 0)
+     | otherwise = let c = exp1 p (rest b) in
+                       List (List (sub (fe b) (Atom 1), 1) (fe c), fc c) (Atom 0)
+
+exp2 a 1 = a
+exp2 a q = mul (List (mul (fe a) (Atom $ q - 1), 1) (Atom 0)) a
+
+limitp (Atom a) = a == 0
+limitp a        = limitp $ rest a
+
+limitpart (Atom a) = Atom 0
+limitpart a        = List (first a) (limitpart $ rest a)
+
+natpart (Atom a) = a
+natpart a        = natpart $ rest a
+
+helper_exp3 a p n 0 = Atom p
+helper_exp3 a p n q = padd (mul (exp2 a q) (Atom p)) (helper_exp3 a p n (q - 1)) n
+
+exp3 a 0 = Atom 1
+exp3 a 1 = a
+exp3 a q
+    | limitp a  = exp2 a q
+    | otherwise = padd (exp2 c q) (helper_exp3 c (natpart a) n (q-1)) n
+      where
+        c = limitpart a
+        n = len a
+
+exp4 a b = mul (List (mul (fe a) (limitpart b), 1) (Atom 0)) (exp3 a (natpart b))
+
+exp (Atom 1) _        = Atom 1
+exp _ (Atom 0)        = Atom 1
+exp (Atom 0) _        = Atom 0
+exp (Atom a) (Atom b) = Atom $ a ^ b
+exp (Atom a) b        = exp1 a b
+exp a (Atom b)        = exp3 a b
+exp a b               = exp4 a b
 
 expr2CNF :: Expr -> CNF
 expr2CNF (Ord n)    = Atom n

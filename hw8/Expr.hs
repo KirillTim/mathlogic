@@ -1,6 +1,6 @@
 module Expr where
 
-data Expr = Plus Expr Expr | Mul Expr Expr | Pow Expr Expr | Limit | Ord Int
+data Expr = Plus Expr Expr | Mul Expr Expr | Pow Expr Expr | Limit | Ord Integer
 instance Show Expr where
   show (Pow l@Limit r) = show l ++ "^(" ++ show r ++ ")"
   show (Pow l@(Ord _) r) = show l ++ "^(" ++ show r ++ ")"

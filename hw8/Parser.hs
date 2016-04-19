@@ -1,14 +1,6 @@
 module Parser where
 import Text.ParserCombinators.Parsec
-
-data Expr = Brace Expr | Plus Expr Expr | Mul Expr Expr | Pow Expr Expr | Limit | Ord Int
-instance Show Expr where
-  show (Brace e) = "(" ++ show e ++ ")"
-  show (Pow l r) = show l ++ "^(" ++ show r ++ ")"
-  show (Mul l r) = show l ++ "*" ++ show r
-  show (Plus l r) = show l ++ "+" ++ show r
-  show Limit = "W"
-  show (Ord i) = show i
+import Expr
 
 stringToInt :: String -> Int
 stringToInt str = fst (head (reads str :: [(Int, String)]))

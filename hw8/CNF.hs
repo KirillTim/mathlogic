@@ -161,6 +161,6 @@ exp a b               = exp4 a b
 expr2CNF :: Expr -> CNF
 expr2CNF (Ord n)    = Atom n
 expr2CNF Limit      = List (Atom 1, 1) (Atom 0)
-expr2CNF (Pow l r)  = expr2CNF l `add` expr2CNF r
+expr2CNF (Pow l r)  = expr2CNF l `CNF.exp` expr2CNF r
 expr2CNF (Mul l r)  = expr2CNF l `mul` expr2CNF r
-expr2CNF (Plus l r) = expr2CNF l `CNF.exp` expr2CNF r
+expr2CNF (Plus l r) = expr2CNF l `add` expr2CNF r

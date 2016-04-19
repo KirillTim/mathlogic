@@ -21,14 +21,14 @@ braces = spaces *> char '(' *> expr <* char ')' <* spaces
 term :: Parser Expr
 term = try ord <|> (try lim <|> braces)
 
-expr1 :: Parser Expr
-expr1 = do
+expr :: Parser Expr
+expr = do
   x <- spaces *> plus
   xs <- many ((spaces *> char '+' <* spaces) >> plus) <* spaces
   return $ foldl1 Plus (x:xs)
 
-expr :: Parser Expr
-expr = try braces <|> expr1
+--expr :: Parser Expr
+--expr = try braces <|> expr1
 
 plus :: Parser Expr
 plus = do
@@ -49,5 +49,5 @@ line = do
   r <- expr
   return (l, r)
 
-parseLine :: [Char] -> Either ParseError (Expr, Expr)
+parseLine :: String -> Either ParseError (Expr, Expr)
 parseLine = parse line ""

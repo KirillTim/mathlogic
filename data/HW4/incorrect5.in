@@ -1,8 +1,0 @@
-W|-W
-(Q(x)&@xP(x))->(Q(x)&@xP(x))->(Q(x)&@xP(x))
-(Q(x)&@xP(x))->((Q(x)&@xP(x))->(Q(x)&@xP(x)))->(Q(x)&@xP(x))
-((Q(x)&@xP(x))->(Q(x)&@xP(x))->(Q(x)&@xP(x)))->((Q(x)&@xP(x))->((Q(x)&@xP(x))->(Q(x)&@xP(x)))->(Q(x)&@xP(x)))->(Q(x)&@xP(x))->(Q(x)&@xP(x))
-((Q(x)&@xP(x))->((Q(x)&@xP(x))->(Q(x)&@xP(x)))->(Q(x)&@xP(x)))->(Q(x)&@xP(x))->(Q(x)&@xP(x))
-(Q(x)&@xP(x))->(Q(x)&@xP(x))
-(Q(x)&@xP(x))->@x(Q(x)&(@xP(x)))
-W

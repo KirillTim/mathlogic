@@ -2,8 +2,8 @@ module Parser where
 import Text.ParserCombinators.Parsec
 import Expr
 
-stringToInt :: String -> Int
-stringToInt str = fst (head (reads str :: [(Int, String)]))
+stringToInt :: String -> Integer
+stringToInt str = fst (head (reads str :: [(Integer, String)]))
 
 lim :: Parser Expr
 lim = do

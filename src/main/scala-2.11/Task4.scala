@@ -13,7 +13,7 @@ object Task4 {
       val fileName = if (args.length == 0 || args(0) == "") name else args(0)
       print(fileName + " testing... ")
       val start = System.currentTimeMillis()
-      val pw = new PrintWriter(new File(name + "hw4.out"))
+      val pw = new PrintWriter(new File(name + ".hw4.out"))
       try {
         new Deductor().apply(fileName) match {
           case Left(error) =>
